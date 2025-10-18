@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access Blocked - Study Mode</title>
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      .blocked-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        text-align: center;
+      }
+      
+      .blocked-icon {
+        font-size: 120px;
+        margin-bottom: 20px;
+        animation: pulse 2s ease-in-out infinite;
+      }
+      
+      @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+      }
+      
+      .blocked-container h1 {
+        font-size: 48px;
+        margin: 0 0 20px 0;
+        color: white;
+      }
+      
+      .blocked-container p {
+        font-size: 20px;
+        margin: 10px 0;
+        opacity: 0.9;
+      }
+      
+      .blocked-url {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 15px 25px;
+        border-radius: 10px;
+        margin: 30px 0;
+        font-family: 'Courier New', monospace;
+        word-break: break-all;
+        max-width: 600px;
+      }
+      
+      .btn-back {
+        margin-top: 30px;
+        padding: 15px 30px;
+        font-size: 18px;
+        background: white;
+        color: #667eea;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: all 0.3s;
+      }
+      
+      .btn-back:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+      }
+      
+      .tips {
+        margin-top: 40px;
+        background: rgba(255, 255, 255, 0.15);
+        padding: 20px;
+        border-radius: 10px;
+        max-width: 500px;
+      }
+      
+      .tips h3 {
+        margin-top: 0;
+        color: white;
+      }
+      
+      .tips ul {
+        text-align: left;
+        list-style-position: inside;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="blocked-container">
+      <div class="blocked-icon">🚫</div>
+      <h1>Access Blocked</h1>
+      <p>This website is not allowed during Study Mode.</p>
+      <div class="blocked-url" id="blockedUrl">Loading...</div>
+      
+      <button class="btn-back" onclick="history.back()">
+        ← Go Back
+      </button>
+    </div>
+    
+    <script>
+      // Display the blocked URL
+      const params = new URLSearchParams(window.location.search);
+      const blockedUrl = params.get('url') || document.referrer || 'Unknown URL';
+      
+      if (blockedUrl && blockedUrl !== 'Unknown URL') {
+        try {
+          const url = new URL(blockedUrl);
+          document.getElementById('blockedUrl').textContent = url.hostname;
+        } catch (e) {
+          document.getElementById('blockedUrl').textContent = blockedUrl;
+        }
+      } else {
+        document.getElementById('blockedUrl').textContent = 'This website';
+      }
+      
+      // Generate motivational quotes
+      const quotes = [
+        "Focus is the gateway to success.",
+        "Stay committed to your decisions, but flexible in your approach.",
+        "Success is the sum of small efforts repeated day in and day out.",
+        "The expert in anything was once a beginner.",
+        "Education is the most powerful weapon you can use to change the world."
+      ];
+      
+      // You could add a random quote here if desired
+    </script>
+  </body>
+</html>
