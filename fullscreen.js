@@ -28,22 +28,22 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 function enableFullScreenMode() {
   isFullScreenMode = true;
   
-  // Don't force full screen - just monitor and restrict actions
-  // requestFullScreen(); // REMOVED - too restrictive
+  // Request full screen immediately
+  requestFullScreen();
   
-  // Monitor user actions instead
+  // Monitor and maintain full screen
   startFullScreenMonitoring();
   
   // Prevent context menu (right-click)
   document.addEventListener('contextmenu', preventContextMenu);
   
-  // Warn on certain key combinations
+  // Prevent exit keys
   document.addEventListener('keydown', preventExitKeys);
   
-  // Add visual indicator that CodZe is active
+  // Add visual indicator
   addCodZeIndicator();
   
-  console.log("CodZe: Protection mode enabled");
+  console.log("CodZe: Full screen lock enabled");
 }
 /**
  * Disable full screen lock mode
@@ -61,12 +61,12 @@ function disableFullScreenMode() {
   // Remove visual indicator
   removeCodZeIndicator();
   
-  // Exit full screen if currently in it
+  // Exit full screen
   if (document.fullscreenElement) {
     document.exitFullscreen().catch(err => console.log(err));
   }
   
-  console.log("CodZe: Protection mode disabled");
+  console.log("CodZe: Full screen lock disabled");
 }
 function requestFullScreen() {
   const elem = document.documentElement;
@@ -92,13 +92,14 @@ function startFullScreenMonitoring() {
   document.addEventListener('fullscreenchange', handleFullScreenChange);
   document.addEventListener('webkitfullscreenchange', handleFullScreenChange);
   
-  // Periodic check for suspicious activity (every 3 seconds)
+  // Aggressive monitoring - check every 1 second
   fullScreenCheckInterval = setInterval(() => {
-    if (isFullScreenMode) {
-      // Just log activity, don't force full screen
-      console.log("CodZe: Active monitoring");
+    if (isFullScreenMode && !document.fullscreenElement) {
+      // User exited full screen - force back in
+      console.log("CodZe: Detected full screen exit, re-entering...");
+      requestFullScreen();
     }
-  }, 3000);
+  }, 1000);
 }
 function stopFullScreenMonitoring() {
   document.removeEventListener('fullscreenchange', handleFullScreenChange);
@@ -113,8 +114,16 @@ function stopFullScreenMonitoring() {
  */
 function handleFullScreenChange() {
   if (!document.fullscreenElement && isFullScreenMode) {
-    // Just log, don't force back
-    console.log("CodZe: Full screen exited");
+    // Exited full screen - immediately re-enter
+    console.log("CodZe: Full screen exited, forcing re-entry...");
+    showExitWarning();
+    
+    // Wait 500ms then force back into full screen
+    setTimeout(() => {
+      if (isFullScreenMode) {
+        requestFullScreen();
+      }
+    }, 500);
   }
 }
 function preventContextMenu(e) {
@@ -130,24 +139,68 @@ function preventContextMenu(e) {
 function preventExitKeys(e) {
   if (!isFullScreenMode) return;
   
-  // Ctrl+W (close tab) - warn but don't prevent
+  // F11 (full screen toggle) - BLOCK
+  if (e.key === 'F11') {
+    e.preventDefault();
+    showWarningToast("F11 is disabled in CodZe mode");
+    return false;
+  }
+  
+  // Escape key - BLOCK (exits full screen)
+  if (e.key === 'Escape') {
+    e.preventDefault();
+    showWarningToast("Cannot exit full screen while CodZe is active");
+    return false;
+  }
+  
+  // Ctrl+W (close tab) - BLOCK
   if (e.ctrlKey && e.key === 'w') {
-    showWarningToast("Warning: Closing tabs during CodZe session");
-    // Don't prevent - just warn
+    e.preventDefault();
+    showWarningToast("Cannot close tabs while CodZe is active");
+    return false;
   }
   
-  // Ctrl+T (new tab) - warn but don't prevent
+  // Ctrl+T (new tab) - BLOCK
   if (e.ctrlKey && e.key === 't') {
-    showWarningToast("Warning: Opening new tabs during CodZe session");
-    // Don't prevent - just warn
+    e.preventDefault();
+    showWarningToast("Cannot open new tabs while CodZe is active");
+    return false;
   }
   
-  // Ctrl+Shift+N (incognito) - prevent
+  // Ctrl+N (new window) - BLOCK
+  if (e.ctrlKey && e.key === 'n') {
+    e.preventDefault();
+    showWarningToast("Cannot open new windows while CodZe is active");
+    return false;
+  }
+  
+  // Ctrl+Shift+N (incognito) - BLOCK
   if (e.ctrlKey && e.shiftKey && e.key === 'N') {
     e.preventDefault();
     showWarningToast("Incognito mode is disabled in CodZe");
     return false;
   }
+  
+  // Alt+Tab - WARN (can't fully block due to OS)
+  if (e.altKey && e.key === 'Tab') {
+    e.preventDefault();
+    showWarningToast("Alt+Tab is disabled in CodZe mode");
+    return false;
+  }
+  
+  // Ctrl+Shift+T (reopen closed tab) - BLOCK
+  if (e.ctrlKey && e.shiftKey && e.key === 'T') {
+    e.preventDefault();
+    showWarningToast("Cannot reopen tabs while CodZe is active");
+    return false;
+  }
+}
+
+/**
+ * Show warning when exiting full screen
+ */
+function showExitWarning() {
+  showWarningToast("⚠️ Please stay in full screen mode while CodZe is active", 3000);
 }
 
 /**

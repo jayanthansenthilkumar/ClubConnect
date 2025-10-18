@@ -16,7 +16,7 @@ function updateStudyMode() {
     modeStatus.className = enabled ? "status-text active" : "status-text inactive";
     
     const message = enabled 
-      ? "CodZe enabled - Monitoring active" 
+      ? "CodZe enabled - Full screen lock activated" 
       : "CodZe disabled";
     showMessage(message, "info");
   });
