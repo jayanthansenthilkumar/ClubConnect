@@ -1,3 +1,8 @@
+/**
+ * CodZe Extension - Background Service Worker
+ * Manages URL blocking rules based on an allowlist of educational websites
+ */
+
 const defaultAllowedSites = [
   "khanacademy.org",
   "coursera.org",
@@ -10,22 +15,32 @@ const defaultAllowedSites = [
   "youtube.com",
   "google.com"
 ];
+
+// Initialize rules when extension is installed
 chrome.runtime.onInstalled.addListener(() => {
   console.log("CodZe Extension installed");
+  
+  // Set default allowed sites and enable CodZe by default
   chrome.storage.local.get(["allowedSites", "studyModeEnabled"], (data) => {
     if (!data.allowedSites) {
       chrome.storage.local.set({ allowedSites: defaultAllowedSites });
     }
+    // Always enable by default on installation
     if (data.studyModeEnabled === undefined) {
       chrome.storage.local.set({ studyModeEnabled: true });
     }
+    
+    // Enable blocking rules immediately
     updateBlockingRules(data.allowedSites || defaultAllowedSites, true);
   });
 });
+// Listen for changes in storage (when user updates allowed sites or toggle mode)
 chrome.storage.onChanged.addListener((changes) => {
   if (changes.allowedSites || changes.studyModeEnabled) {
     chrome.storage.local.get(["allowedSites", "studyModeEnabled"], (data) => {
       updateBlockingRules(data.allowedSites, data.studyModeEnabled);
+      
+      // Enable/disable full screen lock based on study mode
       if (changes.studyModeEnabled) {
         toggleFullScreenLock(data.studyModeEnabled);
       }
@@ -86,17 +101,25 @@ function updateBlockingRules(allowedSites, enabled = true) {
     }
   });
 }
+/**
+ * Toggle full screen lock on all tabs
+ * @param {Boolean} enabled - Whether to enable full screen lock
+ */
 function toggleFullScreenLock(enabled) {
   chrome.tabs.query({}, (tabs) => {
     tabs.forEach(tab => {
+      // Skip chrome:// and extension pages
       if (tab.url && !tab.url.startsWith('chrome://') && !tab.url.startsWith('chrome-extension://')) {
         chrome.tabs.sendMessage(tab.id, {
           action: enabled ? "enableFullScreen" : "disableFullScreen"
         }).catch(err => {
-          console.log("Could not send message to tab:", tab.id);
+          // Silently ignore - content script may not be loaded yet
+          console.log("Could not send message to tab:", tab.id, err.message);
         });
       }
     });
   });
+  
+  // Store preference
   chrome.storage.local.set({ fullScreenLock: enabled });
 }
