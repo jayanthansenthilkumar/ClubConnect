@@ -20,48 +20,45 @@ const defaultAllowedSites = [
 chrome.runtime.onInstalled.addListener(() => {
   console.log("CodZe Extension installed");
   
-  // Set default allowed sites and enable CodZe by default
-  chrome.storage.local.get(["allowedSites", "studyModeEnabled"], (data) => {
+  // Set default allowed sites and ALWAYS keep CodZe enabled
+  chrome.storage.local.get(["allowedSites"], (data) => {
     if (!data.allowedSites) {
       chrome.storage.local.set({ allowedSites: defaultAllowedSites });
     }
-    // Always enable by default on installation
-    if (data.studyModeEnabled === undefined) {
-      chrome.storage.local.set({ studyModeEnabled: true });
-    }
+    // Force always enabled - cannot be disabled
+    chrome.storage.local.set({ studyModeEnabled: true });
     
     // Enable blocking rules immediately
     updateBlockingRules(data.allowedSites || defaultAllowedSites, true);
   });
 });
-// Listen for changes in storage (when user updates allowed sites or toggle mode)
+
+// Ensure CodZe stays enabled at all times
 chrome.storage.onChanged.addListener((changes) => {
-  if (changes.allowedSites || changes.studyModeEnabled) {
-    chrome.storage.local.get(["allowedSites", "studyModeEnabled"], (data) => {
-      updateBlockingRules(data.allowedSites, data.studyModeEnabled);
-      
-      // Fullscreen mode is disabled - no longer toggling fullscreen lock
-      // Site blocking functionality remains active
+  if (changes.studyModeEnabled && changes.studyModeEnabled.newValue === false) {
+    // Prevent disabling - force it back to true
+    console.log("CodZe: Cannot disable - forcing back to active state");
+    chrome.storage.local.set({ studyModeEnabled: true });
+  }
+});
+// Listen for changes in allowed sites list
+chrome.storage.onChanged.addListener((changes) => {
+  if (changes.allowedSites) {
+    chrome.storage.local.get(["allowedSites"], (data) => {
+      // Always enabled - no need to check studyModeEnabled
+      updateBlockingRules(data.allowedSites, true);
     });
   }
 });
 
 /**
  * Updates the blocking rules based on allowed sites list
+ * CodZe is ALWAYS ACTIVE - blocking rules are always enforced
  * @param {Array} allowedSites - List of allowed domain names
- * @param {Boolean} enabled - Whether study mode is enabled
+ * @param {Boolean} enabled - Always true (kept for compatibility)
  */
 function updateBlockingRules(allowedSites, enabled = true) {
-  if (!enabled) {
-    // Remove all blocking rules when study mode is disabled
-    chrome.declarativeNetRequest.getDynamicRules((rules) => {
-      const ruleIds = rules.map(rule => rule.id);
-      chrome.declarativeNetRequest.updateDynamicRules({
-        removeRuleIds: ruleIds
-      });
-    });
-    return;
-  }
+  // CodZe is always active - no disable option
 
   // Prepare excluded domains (normalize URLs and handle subdomains)
   const excludedDomains = [];
