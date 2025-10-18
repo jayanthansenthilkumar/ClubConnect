@@ -19,12 +19,20 @@ To develop a Chrome extension that creates a distraction-free browsing environme
 
 ### Core Features
 
-- **📚 Allowlist-Based Access** - Pre-configured list of allowed educational domains (admin-controlled)
+- **� Full Screen Lock** - Automatically locks browser in full screen mode when active (NEW!)
+- **�📚 Allowlist-Based Access** - Pre-configured list of allowed educational domains (admin-controlled)
 - **🚫 Automatic Blocking** - Blocks all non-educational sites with a custom blocked page
-- **🎛️ Simple Toggle** - Users can enable/disable Study Mode with a single click
+- **🎛️ Simple Toggle** - Users can enable/disable CodZe with a single click
 - **💾 Persistent Storage** - Settings are saved and synced across sessions
-- **� Admin-Controlled** - Only administrators can modify the allowed websites list
-- **� Enterprise Ready** - Designed for educational institutions and managed environments
+- **🔐 Admin-Controlled** - Only administrators can modify the allowed websites list
+- **📊 Enterprise Ready** - Designed for educational institutions and managed environments
+
+### Full Screen Lock Features
+- Prevents browser minimization and tab switching
+- Disables keyboard shortcuts (F11, Alt+Tab, Ctrl+W, Ctrl+T)
+- Automatically re-enters full screen if exited
+- Shows warnings when attempting to exit full screen
+- Disables right-click context menu
 
 ## ⚙️ Tech Stack
 

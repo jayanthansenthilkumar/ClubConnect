@@ -40,6 +40,11 @@ chrome.storage.onChanged.addListener((changes) => {
   if (changes.allowedSites || changes.studyModeEnabled) {
     chrome.storage.local.get(["allowedSites", "studyModeEnabled"], (data) => {
       updateBlockingRules(data.allowedSites, data.studyModeEnabled);
+      
+      // Enable/disable full screen lock based on study mode
+      if (changes.studyModeEnabled) {
+        toggleFullScreenLock(data.studyModeEnabled);
+      }
     });
   }
 });
@@ -96,4 +101,26 @@ function updateBlockingRules(allowedSites, enabled = true) {
       console.log("Blocking rules updated. Allowed sites:", excludedDomains);
     }
   });
+}
+
+/**
+ * Toggle full screen lock on all tabs
+ * @param {Boolean} enabled - Whether to enable full screen lock
+ */
+function toggleFullScreenLock(enabled) {
+  chrome.tabs.query({}, (tabs) => {
+    tabs.forEach(tab => {
+      if (tab.url && !tab.url.startsWith('chrome://') && !tab.url.startsWith('chrome-extension://')) {
+        chrome.tabs.sendMessage(tab.id, {
+          action: enabled ? "enableFullScreen" : "disableFullScreen"
+        }).catch(err => {
+          // Ignore errors for tabs where content script isn't loaded yet
+          console.log("Could not send message to tab:", tab.id);
+        });
+      }
+    });
+  });
+  
+  // Store preference
+  chrome.storage.local.set({ fullScreenLock: enabled });
 }

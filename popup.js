@@ -15,7 +15,11 @@ function updateStudyMode() {
   chrome.storage.local.set({ studyModeEnabled: enabled }, () => {
     modeStatus.textContent = enabled ? "CodZe Active" : "CodZe Disabled";
     modeStatus.className = enabled ? "status-text active" : "status-text inactive";
-    showMessage(enabled ? "CodZe enabled" : "CodZe disabled", "info");
+    
+    const message = enabled 
+      ? "CodZe enabled - Full screen mode will be activated" 
+      : "CodZe disabled";
+    showMessage(message, "info");
   });
 }
 

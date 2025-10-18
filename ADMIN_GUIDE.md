@@ -1,7 +1,22 @@
 # Study Mode Extension - Administrator Guide
 
 ## Overview
-This extension is designed for educational environments where administrators need to control which websites students can access. Regular users can only enable/disable Study Mode but cannot modify the allowed websites list.
+This extension is designed for educational environments where administrators need to control which websites students can access. The extension now includes a **Full Screen Lock** feature that prevents users from minimizing or exiting the browser when CodZe is active.
+
+## Features
+
+### 1. Website Access Control
+- Only whitelisted educational websites are accessible
+- All other sites are blocked with a custom blocked page
+
+### 2. Full Screen Lock Mode
+- Automatically enters full screen when CodZe is activated
+- Prevents users from exiting full screen (with warnings and re-prompts)
+- Disables certain keyboard shortcuts (F11, Ctrl+W, Ctrl+T, Alt+Tab)
+- Disables right-click context menu
+- Automatically re-requests full screen if user manages to exit
+
+**Note:** Due to browser security, the extension cannot completely prevent determined users from exiting, but it creates significant barriers and warnings.
 
 ## Modifying Allowed Websites (Admin Only)
 
