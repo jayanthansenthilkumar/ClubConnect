@@ -40,10 +40,8 @@ chrome.storage.onChanged.addListener((changes) => {
     chrome.storage.local.get(["allowedSites", "studyModeEnabled"], (data) => {
       updateBlockingRules(data.allowedSites, data.studyModeEnabled);
       
-      // Enable/disable full screen lock based on study mode
-      if (changes.studyModeEnabled) {
-        toggleFullScreenLock(data.studyModeEnabled);
-      }
+      // Fullscreen mode is disabled - no longer toggling fullscreen lock
+      // Site blocking functionality remains active
     });
   }
 });

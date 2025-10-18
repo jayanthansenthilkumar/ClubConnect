@@ -389,10 +389,6 @@ if (document.head) {
   document.head.appendChild(style);
 }
 
-// Check if CodZe is already active on page load
-chrome.storage.local.get(['studyModeEnabled', 'fullScreenLock'], (data) => {
-  if (data.studyModeEnabled && data.fullScreenLock !== false) {
-    // Enable full screen mode automatically after a delay
-    setTimeout(() => enableFullScreenMode(), 1000);
-  }
-});
+// Fullscreen mode is disabled
+// Users can still access the site blocking features without fullscreen enforcement
+console.log("CodZe: Fullscreen mode is disabled. Site blocking remains active.");
