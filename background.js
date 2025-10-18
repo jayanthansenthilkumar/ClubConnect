@@ -131,7 +131,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     chrome.tabs.update(tabId, { url: chrome.runtime.getURL('blocked.html') + '?reason=extensions' });
   }
 });
-}
+
 /**
  * Toggle full screen lock on all tabs
  * @param {Boolean} enabled - Whether to enable full screen lock
