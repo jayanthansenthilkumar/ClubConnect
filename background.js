@@ -6,6 +6,7 @@
 const defaultAllowedSites = [
   "khanacademy.org",
   "coursera.org",
+  "mkce.codetantra.com",
   "edx.org",
   "wikipedia.org",
   "stackoverflow.com",
@@ -113,6 +114,23 @@ function updateBlockingRules(allowedSites, enabled = true) {
       console.log("🚫 All other sites will be blocked");
     }
   });
+}
+
+/**
+ * Block access to chrome://extensions and edge://extensions
+ */
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.url && (
+    changeInfo.url.startsWith('chrome://extensions') ||
+    changeInfo.url.startsWith('edge://extensions') ||
+    changeInfo.url.includes('chrome://settings') ||
+    changeInfo.url.includes('edge://settings')
+  )) {
+    // Redirect to blocked page
+    console.log('CodZe: Blocking access to extensions management');
+    chrome.tabs.update(tabId, { url: chrome.runtime.getURL('blocked.html') + '?reason=extensions' });
+  }
+});
 }
 /**
  * Toggle full screen lock on all tabs

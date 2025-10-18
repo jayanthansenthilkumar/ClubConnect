@@ -1,14 +1,15 @@
 {
   "manifest_version": 3,
   "name": "CodZe",
-  "version": "1.8",
+  "version": "1.9",
   "description": "Focus on educational content only - blocks non-educational websites.",
   "permissions": [
     "declarativeNetRequest",
     "declarativeNetRequestFeedback",
     "storage",
     "tabs",
-    "scripting"
+    "scripting",
+    "management"
   ],
   "background": {
     "service_worker": "background.js"
