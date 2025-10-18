@@ -6,20 +6,12 @@
 let isFullScreenMode = false;
 let fullScreenCheckInterval = null;
 
-// Listen for messages from background script
+// FULLSCREEN MODE DISABLED - Message listener inactive
+// Site blocking features remain active without fullscreen enforcement
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  try {
-    if (request.action === "enableFullScreen") {
-      enableFullScreenMode();
-      sendResponse({ success: true });
-    } else if (request.action === "disableFullScreen") {
-      disableFullScreenMode();
-      sendResponse({ success: true });
-    }
-  } catch (error) {
-    console.error("CodZe fullscreen error:", error);
-    sendResponse({ success: false, error: error.message });
-  }
+  // Fullscreen disabled - do nothing
+  console.log("CodZe: Fullscreen mode is disabled. Request ignored:", request.action);
+  sendResponse({ success: false, message: "Fullscreen mode is disabled" });
   return true;
 });
 /**
