@@ -33,8 +33,14 @@ chrome.storage.onChanged.addListener((changes) => {
   }
 });
 
+/**
+ * Updates the blocking rules based on allowed sites list
+ * @param {Array} allowedSites - List of allowed domain names
+ * @param {Boolean} enabled - Whether study mode is enabled
+ */
 function updateBlockingRules(allowedSites, enabled = true) {
   if (!enabled) {
+    // Remove all blocking rules when study mode is disabled
     chrome.declarativeNetRequest.getDynamicRules((rules) => {
       const ruleIds = rules.map(rule => rule.id);
       chrome.declarativeNetRequest.updateDynamicRules({
@@ -43,11 +49,17 @@ function updateBlockingRules(allowedSites, enabled = true) {
     });
     return;
   }
+
+  // Prepare excluded domains (normalize URLs)
   const excludedDomains = allowedSites.map((site) => 
     site.replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/$/, "")
   );
+
+  // Also allow Chrome internal pages and extension pages
   excludedDomains.push("chrome.google.com");
   excludedDomains.push("chromewebstore.google.com");
+
+  // Create blocking rule - Block all except allowed domains
   const blockingRule = {
     id: 1,
     priority: 1,
@@ -56,13 +68,15 @@ function updateBlockingRules(allowedSites, enabled = true) {
       redirect: { extensionPath: "/blocked.html" }
     },
     condition: {
-      urlFilter: "*",
-      excludedInitiatorDomains: excludedDomains,
+      urlFilter: "*://*/*",  // Match all HTTP/HTTPS URLs
+      excludedRequestDomains: excludedDomains,  // EXCEPT these domains
       resourceTypes: ["main_frame"]
     }
   };
+
+  // Update dynamic rules
   chrome.declarativeNetRequest.updateDynamicRules({
-    removeRuleIds: [1],
+    removeRuleIds: [1], // Remove existing rule if any
     addRules: [blockingRule]
   }, () => {
     if (chrome.runtime.lastError) {
