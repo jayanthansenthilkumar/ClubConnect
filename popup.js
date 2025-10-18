@@ -1,60 +1,14 @@
 /**
  * CodZe Extension - Popup Script
- * Handles user interactions in the extension popup
+ * Display-only popup showing always-active status
  */
 
-const toggleMode = document.getElementById("toggleMode");
-const modeStatus = document.getElementById("modeStatus");
+// Ensure CodZe is always enabled
+chrome.storage.local.set({ studyModeEnabled: true });
 
-/**
- * Toggle CodZe on/off
- */
-function updateStudyMode() {
-  const enabled = toggleMode.checked;  
-  chrome.storage.local.set({ studyModeEnabled: enabled }, () => {
-    modeStatus.textContent = enabled ? "CodZe Active" : "CodZe Disabled";
-    modeStatus.className = enabled ? "status-text active" : "status-text inactive";
-    
-    const message = enabled 
-      ? "CodZe enabled - Full screen lock activated" 
-      : "CodZe disabled";
-    showMessage(message, "info");
-  });
-}
-/**
- * Show temporary message to user
- */
-function showMessage(text, type = "info") {
-  // Remove existing messages
-  const existing = document.querySelector(".message");
-  if (existing) existing.remove();
-  
-  const message = document.createElement("div");
-  message.className = `message message-${type}`;
-  message.textContent = text;
-  
-  document.querySelector(".popup-container").insertBefore(
-    message, 
-    document.querySelector(".header").nextSibling
-  );
-  
-  setTimeout(() => message.remove(), 3000);
-}
-
-/**
- * Load current CodZe status
- */
-function loadModeStatus() {
-  chrome.storage.local.get("studyModeEnabled", (data) => {
-    const enabled = data.studyModeEnabled !== false;
-    toggleMode.checked = enabled;
-    modeStatus.textContent = enabled ? "CodZe Active" : "CodZe Disabled";
-    modeStatus.className = enabled ? "status-text active" : "status-text inactive";
-  });
-}
-
-// Event listeners
-toggleMode.addEventListener("change", updateStudyMode);
-
-// Initialize
-loadModeStatus();
+// Display current allowed sites count
+chrome.storage.local.get("allowedSites", (data) => {
+  const allowedSites = data.allowedSites || [];
+  console.log(`CodZe: ${allowedSites.length} educational sites allowed`);
+  console.log("Allowed sites:", allowedSites);
+});
