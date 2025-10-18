@@ -65,14 +65,29 @@ function updateBlockingRules(allowedSites, enabled = true) {
     return;
   }
 
-  // Prepare excluded domains (normalize URLs)
-  const excludedDomains = allowedSites.map((site) => 
-    site.replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/$/, "")
-  );
+  // Prepare excluded domains (normalize URLs and handle subdomains)
+  const excludedDomains = [];
+  
+  allowedSites.forEach((site) => {
+    // Remove protocol, www, and trailing slash
+    let cleanSite = site.replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/$/, "");
+    
+    // Add the domain
+    excludedDomains.push(cleanSite);
+    
+    // Also add www version if not already present
+    if (!cleanSite.startsWith('www.')) {
+      excludedDomains.push('www.' + cleanSite);
+    }
+  });
 
   // Also allow Chrome internal pages and extension pages
   excludedDomains.push("chrome.google.com");
   excludedDomains.push("chromewebstore.google.com");
+  
+  // CRITICAL: Need to also allow the extension's own blocked.html page
+  // Get extension ID dynamically
+  const extensionId = chrome.runtime.id;
 
   // Create blocking rule - Block all except allowed domains
   const blockingRule = {
@@ -96,8 +111,11 @@ function updateBlockingRules(allowedSites, enabled = true) {
   }, () => {
     if (chrome.runtime.lastError) {
       console.error("Error updating rules:", chrome.runtime.lastError);
+      console.error("Rule details:", JSON.stringify(blockingRule, null, 2));
     } else {
-      console.log("Blocking rules updated. Allowed sites:", excludedDomains);
+      console.log("✅ CodZe: Blocking rules updated successfully!");
+      console.log("📚 Allowed sites:", excludedDomains);
+      console.log("🚫 All other sites will be blocked");
     }
   });
 }
@@ -123,3 +141,28 @@ function toggleFullScreenLock(enabled) {
   // Store preference
   chrome.storage.local.set({ fullScreenLock: enabled });
 }
+
+/**
+ * Debug function - Check current blocking rules
+ * Call this from console: chrome.runtime.sendMessage({action: "checkRules"})
+ */
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === "checkRules") {
+    chrome.declarativeNetRequest.getDynamicRules((rules) => {
+      console.log("Current blocking rules:", rules);
+      sendResponse({ rules: rules });
+    });
+    return true;
+  }
+  
+  if (request.action === "testSite") {
+    chrome.storage.local.get("allowedSites", (data) => {
+      const allowed = data.allowedSites || [];
+      sendResponse({ 
+        allowed: allowed,
+        message: `Testing against ${allowed.length} allowed sites`
+      });
+    });
+    return true;
+  }
+});
