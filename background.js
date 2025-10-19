@@ -4,17 +4,92 @@
  */
 
 const defaultAllowedSites = [
+  // Learning Platforms
   "khanacademy.org",
   "coursera.org",
-  "mkce.codetantra.com",
   "edx.org",
-  "wikipedia.org",
+  "udemy.com",
+  "udacity.com",
+  "skillshare.com",
+  "pluralsight.com",
+  "linkedin.com",  // LinkedIn Learning
+  "codecademy.com",
+  "freecodecamp.org",
+  "theodinproject.com",
+  
+  // Coding Practice & Competition
+  "codetantra.com",  // Parent domain for mkce.codetantra.com
+  "mkce.codetantra.com",
+  "hackerrank.com",
+  "leetcode.com",
+  "codechef.com",
+  "codeforces.com",
+  "topcoder.com",
+  "codewars.com",
+  "exercism.org",
+  
+  // Documentation & References
   "stackoverflow.com",
+  "stackexchange.com",
   "github.com",
+  "gitlab.com",
+  "bitbucket.org",
   "mdn.mozilla.org",
   "w3schools.com",
+  "developer.mozilla.org",
+  "docs.python.org",
+  "docs.oracle.com",
+  "dev.to",
+  "medium.com",
+  
+  // Educational Resources
+  "wikipedia.org",
+  "wikihow.com",
+  "britannica.com",
+  "nationalgeographic.com",
+  "khanacademy.org",
+  "ted.com",
   "youtube.com",
-  "google.com"
+  "vimeo.com",
+  
+  // Academic & Research
+  "scholar.google.com",
+  "arxiv.org",
+  "researchgate.net",
+  "academia.edu",
+  "jstor.org",
+  "sciencedirect.com",
+  "ieee.org",
+  "acm.org",
+  
+  // Math & Science
+  "wolframalpha.com",
+  "desmos.com",
+  "mathway.com",
+  "brilliant.org",
+  "geogebra.org",
+  
+  // Language Learning
+  "duolingo.com",
+  "memrise.com",
+  "babbel.com",
+  
+  // General Tools
+  "google.com",
+  "drive.google.com",
+  "docs.google.com",
+  "gmail.com",
+  "zoom.us",
+  "meet.google.com",
+  "teams.microsoft.com",
+  "office.com",
+  "office365.com",
+  "onedrive.live.com",
+  "dropbox.com",
+  "notion.so",
+  "trello.com",
+  "slack.com",
+  "discord.com"
 ];
 
 // Initialize rules when extension is installed
@@ -74,6 +149,18 @@ function updateBlockingRules(allowedSites, enabled = true) {
     // Also add www version if not already present
     if (!cleanSite.startsWith('www.')) {
       excludedDomains.push('www.' + cleanSite);
+    }
+    
+    // For subdomains, also add the parent domain to ensure access
+    // Example: mkce.codetantra.com -> also add codetantra.com
+    const parts = cleanSite.split('.');
+    if (parts.length > 2) {
+      // This is a subdomain, add parent domain
+      const parentDomain = parts.slice(-2).join('.');
+      if (!excludedDomains.includes(parentDomain)) {
+        excludedDomains.push(parentDomain);
+        excludedDomains.push('www.' + parentDomain);
+      }
     }
   });
 
