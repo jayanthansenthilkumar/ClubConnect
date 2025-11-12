@@ -64,4 +64,51 @@ public class EventController {
         eventService.deleteEvent(id);
         return ResponseEntity.noContent().build();
     }
+    
+    @PutMapping("/{id}/approve")
+    public ResponseEntity<Event> approveEvent(@PathVariable Long id, @RequestParam String approvedBy) {
+        try {
+            Event approvedEvent = eventService.approveEvent(id, approvedBy);
+            return ResponseEntity.ok(approvedEvent);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+    
+    @PutMapping("/{id}/reject")
+    public ResponseEntity<Event> rejectEvent(@PathVariable Long id, 
+                                             @RequestParam String rejectedBy,
+                                             @RequestParam(required = false) String reason) {
+        try {
+            Event rejectedEvent = eventService.rejectEvent(id, rejectedBy, reason);
+            return ResponseEntity.ok(rejectedEvent);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+    
+    @PutMapping("/{id}/pre-report")
+    public ResponseEntity<Event> addPreEventReport(@PathVariable Long id, @RequestBody String report) {
+        try {
+            Event updatedEvent = eventService.addPreEventReport(id, report);
+            return ResponseEntity.ok(updatedEvent);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+    
+    @PutMapping("/{id}/post-report")
+    public ResponseEntity<Event> addPostEventReport(@PathVariable Long id, @RequestBody String report) {
+        try {
+            Event updatedEvent = eventService.addPostEventReport(id, report);
+            return ResponseEntity.ok(updatedEvent);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+    
+    @GetMapping("/pending-approval")
+    public ResponseEntity<List<Event>> getPendingEvents() {
+        return ResponseEntity.ok(eventService.getPendingEvents());
+    }
 }

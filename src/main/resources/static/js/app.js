@@ -59,19 +59,28 @@ function applyRoleBasedRestrictions() {
         addEventBtn.style.display = (isOverallHead || isCoordinator || isPresident) ? 'flex' : 'none';
     }
     
-    // Hide certain sections for non-admin users
+    // Hide/show sidebar navigation items based on role
+    const navSettings = document.getElementById('nav-settings');
+    const navReports = document.getElementById('nav-reports');
+    const navAnalytics = document.getElementById('nav-analytics');
+    const navMessages = document.getElementById('nav-messages');
+    
     if (!isOverallHead) {
-        // Hide settings section for non-admin
-        const settingsLink = document.querySelector('[onclick*="showSection(\'settings\')"]');
-        if (settingsLink) {
-            settingsLink.parentElement.style.display = 'none';
-        }
+        // Hide admin-only sections
+        if (navSettings) navSettings.style.display = 'none';
+        if (navReports) navReports.style.display = 'none';
+        if (navAnalytics) navAnalytics.style.display = 'none';
         
-        // Hide reports section for non-admin
-        const reportsLink = document.querySelector('[onclick*="showSection(\'reports\')"]');
-        if (reportsLink) {
-            reportsLink.parentElement.style.display = 'none';
+        // Messages available to coordinators and presidents
+        if (navMessages) {
+            navMessages.style.display = (isCoordinator || isPresident) ? 'flex' : 'none';
         }
+    } else {
+        // Show all sections for admin
+        if (navSettings) navSettings.style.display = 'flex';
+        if (navReports) navReports.style.display = 'flex';
+        if (navAnalytics) navAnalytics.style.display = 'flex';
+        if (navMessages) navMessages.style.display = 'flex';
     }
     
     // Show role-based welcome message
@@ -79,28 +88,72 @@ function applyRoleBasedRestrictions() {
 }
 
 // Update welcome message based on role
-function updateWelcomeMessage() {
+async function updateWelcomeMessage() {
     const welcomeCard = document.querySelector('.welcome-card h2');
-    if (welcomeCard && currentUser) {
-        const roleMessages = {
-            'OVERALL_CLUB_HEAD': `Welcome back, ${currentUser.fullName}! 👋`,
-            'CLUB_COORDINATOR': `Welcome, ${currentUser.fullName}! Ready to coordinate?`,
-            'CLUB_PRESIDENT': `Welcome, ${currentUser.fullName}! Lead with excellence!`
-        };
-        welcomeCard.textContent = roleMessages[userRole] || `Welcome, ${currentUser.fullName}!`;
+    const welcomeDescription = document.getElementById('welcome-description');
+    if (!welcomeCard || !currentUser) return;
+    
+    // For coordinators and presidents, fetch and display their club name
+    if ((userRole === 'CLUB_COORDINATOR' || userRole === 'CLUB_PRESIDENT') && userClubId) {
+        try {
+            const response = await fetch(`${API_URL}/clubs/${userClubId}`, {
+                headers: getAuthHeaders()
+            });
+            
+            if (response.ok) {
+                const club = await response.json();
+                
+                if (userRole === 'CLUB_COORDINATOR') {
+                    welcomeCard.textContent = `Welcome, ${currentUser.fullName}! Managing ${club.name} 🎯`;
+                    if (welcomeDescription) {
+                        welcomeDescription.textContent = `Here's an overview of ${club.name}'s activities and members.`;
+                    }
+                } else if (userRole === 'CLUB_PRESIDENT') {
+                    welcomeCard.textContent = `Welcome, ${currentUser.fullName}! Leading ${club.name} 🌟`;
+                    if (welcomeDescription) {
+                        welcomeDescription.textContent = `Keep track of ${club.name}'s events and achievements.`;
+                    }
+                }
+            } else {
+                // Fallback if club fetch fails
+                const roleMessages = {
+                    'CLUB_COORDINATOR': `Welcome, ${currentUser.fullName}! Ready to coordinate? 🎯`,
+                    'CLUB_PRESIDENT': `Welcome, ${currentUser.fullName}! Lead with excellence! 🌟`
+                };
+                welcomeCard.textContent = roleMessages[userRole];
+                if (welcomeDescription) {
+                    welcomeDescription.textContent = "Here's an overview of your club's activities.";
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching club details:', error);
+            // Fallback message
+            welcomeCard.textContent = `Welcome, ${currentUser.fullName}!`;
+            if (welcomeDescription) {
+                welcomeDescription.textContent = "Here's your dashboard overview.";
+            }
+        }
+    } else {
+        // Admin user - show general welcome
+        welcomeCard.textContent = `Welcome back, ${currentUser.fullName}! 👋`;
+        if (welcomeDescription) {
+            welcomeDescription.textContent = "Here's what's happening with your clubs today.";
+        }
     }
 }
 
 // Update user profile in header
 function updateUserProfile() {
+    if (!currentUser) return;
+    
     const userNameElement = document.getElementById('user-name');
     const userRoleElement = document.getElementById('user-role');
     
-    if (userNameElement && currentUser) {
+    if (userNameElement) {
         userNameElement.textContent = currentUser.fullName;
     }
     
-    if (userRoleElement && currentUser) {
+    if (userRoleElement) {
         const roleNames = {
             'OVERALL_CLUB_HEAD': 'Overall Club Head',
             'CLUB_COORDINATOR': 'Club Coordinator',
@@ -108,6 +161,14 @@ function updateUserProfile() {
         };
         userRoleElement.textContent = roleNames[currentUser.role] || currentUser.role;
     }
+    
+    // Update user avatars
+    const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.fullName)}&background=4F46E5&color=fff`;
+    const userAvatars = document.querySelectorAll('.user-icon img, .user-info img');
+    userAvatars.forEach(img => {
+        img.src = avatarUrl;
+        img.alt = currentUser.fullName;
+    });
 }
 
 // Logout function
@@ -133,11 +194,20 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
     
+    // Initialize sidebar
+    initializeSidebar();
+    
+    // Load data
     loadClubs();
     loadMembers();
     loadEvents();
     updateDashboardStats();
     initializeGlobalSearch();
+    
+    // Load pending approvals for admin
+    if (userRole === 'OVERALL_CLUB_HEAD') {
+        loadPendingApprovals();
+    }
     
     // Add logout handler
     const logoutBtn = document.getElementById('logout-btn');
@@ -209,15 +279,51 @@ function toggleSidebar() {
     const mainContent = document.querySelector('.main-content');
     const footer = document.querySelector('.footer');
     
-    sidebar.classList.toggle('active');
+    if (!sidebar) return;
     
-    // For desktop, toggle collapsed state
-    if (window.innerWidth > 1024) {
+    // For mobile, toggle active state (slide in/out)
+    if (window.innerWidth <= 1024) {
+        sidebar.classList.toggle('active');
+    } else {
+        // For desktop, toggle collapsed state
         sidebar.classList.toggle('collapsed');
-        mainContent.classList.toggle('expanded');
-        footer.classList.toggle('expanded');
+        if (mainContent) mainContent.classList.toggle('expanded');
+        if (footer) footer.classList.toggle('expanded');
     }
 }
+
+// Initialize sidebar state based on screen size
+function initializeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    if (!sidebar) return;
+    
+    // On desktop, ensure sidebar is visible
+    if (window.innerWidth > 1024) {
+        sidebar.classList.remove('active');
+        sidebar.classList.remove('collapsed');
+    } else {
+        // On mobile, hide by default
+        sidebar.classList.remove('active');
+    }
+}
+
+// Handle window resize to adjust sidebar
+window.addEventListener('resize', function() {
+    const sidebar = document.getElementById('sidebar');
+    if (!sidebar) return;
+    
+    if (window.innerWidth > 1024) {
+        // Desktop: remove mobile active class
+        sidebar.classList.remove('active');
+    } else {
+        // Mobile: remove desktop collapsed class
+        sidebar.classList.remove('collapsed');
+        const mainContent = document.querySelector('.main-content');
+        const footer = document.querySelector('.footer');
+        if (mainContent) mainContent.classList.remove('expanded');
+        if (footer) footer.classList.remove('expanded');
+    }
+});
 
 // Close sidebar when clicking outside on mobile
 document.addEventListener('click', function(event) {
@@ -250,24 +356,46 @@ document.addEventListener('click', function(event) {
 
 // Section Navigation
 function showSection(section) {
+    // Check role-based access for restricted sections
+    const isOverallHead = userRole === 'OVERALL_CLUB_HEAD';
+    const isCoordinator = userRole === 'CLUB_COORDINATOR';
+    const isPresident = userRole === 'CLUB_PRESIDENT';
+    
+    // Define restricted sections
+    const adminOnlySections = ['settings', 'reports', 'analytics'];
+    const coordinatorSections = ['messages'];
+    
+    // Prevent unauthorized access
+    if (adminOnlySections.includes(section) && !isOverallHead) {
+        showNotification('Access Denied', 'You do not have permission to access this section.', 'error');
+        return;
+    }
+    
+    if (coordinatorSections.includes(section) && !isOverallHead && !isCoordinator && !isPresident) {
+        showNotification('Access Denied', 'You do not have permission to access this section.', 'error');
+        return;
+    }
+    
     // Close sidebar on mobile after selection
     if (window.innerWidth <= 1024) {
         const sidebar = document.getElementById('sidebar');
         sidebar.classList.remove('active');
     }
     
+    // Remove active class from all sections and nav items
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(l => l.classList.remove('active'));
     
+    // Activate the requested section
     const sectionElement = document.getElementById(section + '-section');
     if (sectionElement) {
         sectionElement.classList.add('active');
     }
     
-    // Find the clicked nav item and activate it
-    const clickedNavItem = event.target.closest('.nav-item');
-    if (clickedNavItem) {
-        clickedNavItem.classList.add('active');
+    // Activate the corresponding nav item
+    const navItem = document.getElementById('nav-' + section);
+    if (navItem) {
+        navItem.classList.add('active');
     }
     
     // Load specific section data
@@ -275,6 +403,12 @@ function showSection(section) {
         updateAnalytics();
     } else if (section === 'dashboard') {
         updateDashboardStats();
+    } else if (section === 'clubs') {
+        loadClubs();
+    } else if (section === 'members') {
+        loadMembers();
+    } else if (section === 'events') {
+        loadEvents();
     }
     
     // Scroll to top
@@ -919,31 +1053,75 @@ function displayEvents() {
     
     const canEdit = userRole !== 'CLUB_PRESIDENT';
     const canDelete = userRole === 'OVERALL_CLUB_HEAD';
+    const isAdmin = userRole === 'OVERALL_CLUB_HEAD';
     
     events.forEach(event => {
         const club = clubs.find(c => c.id === event.club?.id);
         const card = document.createElement('div');
         card.className = 'event-card';
         
-        const actionsHTML = (canEdit || canDelete) ? `
-            <div class="card-actions">
-                ${canEdit ? `<button class="btn btn-edit" onclick="editEvent(${event.id})">
+        // Approval status badge
+        const approvalBadge = event.approvalStatus ? `
+            <span class="event-status" style="background: ${
+                event.approvalStatus === 'APPROVED' ? '#10b981' : 
+                event.approvalStatus === 'REJECTED' ? '#ef4444' : '#f59e0b'
+            }; color: white; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; position: absolute; top: 50px; right: 15px;">
+                ${event.approvalStatus}
+            </span>
+        ` : '';
+        
+        // Report buttons
+        const reportButtons = `
+            ${!event.preEventReport && event.approvalStatus === 'APPROVED' ? `
+                <button class="btn btn-sm" style="background: #3b82f6; color: white; margin-right: 5px;" onclick="showPreReportModal(${event.id}, '${escapeHtml(event.title)}')">
+                    <i class="ri-file-edit-line"></i> Pre-Event Report
+                </button>
+            ` : event.preEventReport ? `
+                <span style="color: #10b981; font-size: 0.85rem; margin-right: 10px;">
+                    <i class="ri-check-line"></i> Pre-Report Submitted
+                </span>
+            ` : ''}
+            
+            ${!event.postEventReport && event.status === 'COMPLETED' && event.approvalStatus === 'APPROVED' ? `
+                <button class="btn btn-sm" style="background: #8b5cf6; color: white; margin-right: 5px;" onclick="showPostReportModal(${event.id}, '${escapeHtml(event.title)}')">
+                    <i class="ri-file-text-line"></i> Post-Event Report
+                </button>
+            ` : event.postEventReport ? `
+                <span style="color: #10b981; font-size: 0.85rem; margin-right: 10px;">
+                    <i class="ri-check-line"></i> Post-Report Submitted
+                </span>
+            ` : ''}
+        `;
+        
+        // Action buttons
+        const actionsHTML = `
+            <div class="card-actions" style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px;">
+                ${reportButtons}
+                ${canEdit && event.approvalStatus !== 'APPROVED' ? `<button class="btn btn-edit" onclick="editEvent(${event.id})">
                     <i class="ri-edit-line"></i> Edit
                 </button>` : ''}
                 ${canDelete ? `<button class="btn btn-danger" onclick="deleteEvent(${event.id})">
                     <i class="ri-delete-bin-line"></i> Delete
                 </button>` : ''}
+                ${isAdmin && event.approvalStatus === 'PENDING' ? `<button class="btn btn-success" onclick="showApprovalModal(${event.id})">
+                    <i class="ri-eye-line"></i> Review
+                </button>` : ''}
             </div>
-        ` : '';
+        `;
         
         card.innerHTML = `
             <span class="event-status ${event.status}">${event.status}</span>
+            ${approvalBadge}
             <h3><i class="ri-calendar-check-line"></i> ${escapeHtml(event.title)}</h3>
             <div class="card-info">
                 <p><strong><i class="ri-file-text-line"></i> Description:</strong> ${escapeHtml(event.description) || 'N/A'}</p>
                 <p><strong><i class="ri-calendar-line"></i> Date:</strong> ${new Date(event.eventDate).toLocaleString()}</p>
                 <p><strong><i class="ri-map-pin-line"></i> Location:</strong> ${escapeHtml(event.location) || 'N/A'}</p>
                 <p><strong><i class="ri-building-line"></i> Club:</strong> ${club ? escapeHtml(club.name) : 'N/A'}</p>
+                ${event.participantsCount ? `<p><strong><i class="ri-group-line"></i> Participants:</strong> ${event.participantsCount}</p>` : ''}
+                ${event.budget ? `<p><strong><i class="ri-money-rupee-circle-line"></i> Budget:</strong> ₹${event.budget}</p>` : ''}
+                ${event.createdBy ? `<p style="font-size: 0.85rem; color: #6b7280;"><strong>Created by:</strong> ${event.createdBy}</p>` : ''}
+                ${event.rejectionReason ? `<p style="color: #ef4444; font-size: 0.85rem;"><strong>Rejection Reason:</strong> ${escapeHtml(event.rejectionReason)}</p>` : ''}
             </div>
             ${actionsHTML}
         `;
@@ -979,6 +1157,8 @@ function editEvent(id) {
     
     document.getElementById('event-location').value = event.location || '';
     document.getElementById('event-status').value = event.status;
+    document.getElementById('event-participants').value = event.participantsCount || '';
+    document.getElementById('event-budget').value = event.budget || '';
     
     const club = clubs.find(c => c.id === event.club?.id);
     if (club) {
@@ -1001,7 +1181,10 @@ async function saveEvent(event) {
         description: document.getElementById('event-description').value.trim(),
         eventDate: document.getElementById('event-date').value,
         location: document.getElementById('event-location').value.trim(),
-        status: document.getElementById('event-status').value
+        status: document.getElementById('event-status').value,
+        participantsCount: document.getElementById('event-participants').value || 0,
+        budget: document.getElementById('event-budget').value || 0,
+        createdBy: currentUser.username
     };
     
     const clubId = document.getElementById('event-club').value;
@@ -1037,7 +1220,7 @@ async function saveEvent(event) {
         if (response.ok) {
             closeEventModal();
             await loadEvents();
-            showNotification('success', currentEventId ? 'Event updated successfully!' : 'Event created successfully!');
+            showNotification('success', currentEventId ? 'Event updated successfully!' : 'Event created and sent for approval!');
         } else {
             throw new Error('Failed to save event');
         }
@@ -1226,6 +1409,7 @@ document.addEventListener('keydown', function(event) {
             modal.classList.remove('active');
         });
         
+        
         // Close user dropdown
         const dropdown = document.getElementById('userDropdown');
         if (dropdown) {
@@ -1242,3 +1426,247 @@ document.addEventListener('keydown', function(event) {
         }
     }
 });
+
+// Event Approval Functions
+let currentApprovalEventId = null;
+
+async function loadPendingApprovals() {
+    if (userRole !== 'OVERALL_CLUB_HEAD') return;
+    
+    try {
+        const response = await fetch(`${API_URL}/events/pending-approval`, {
+            headers: getAuthHeaders()
+        });
+        
+        if (response.ok) {
+            const pendingEvents = await response.json();
+            const pendingCard = document.getElementById('pending-approvals-card');
+            const pendingCount = document.getElementById('pending-count');
+            const pendingContainer = document.getElementById('pending-approvals');
+            
+            if (pendingCard && pendingEvents.length > 0) {
+                pendingCard.style.display = 'block';
+                if (pendingCount) pendingCount.textContent = pendingEvents.length;
+                
+                if (pendingContainer) {
+                    pendingContainer.innerHTML = pendingEvents.slice(0, 5).map(event => `
+                        <div class="pending-item" style="padding: 10px; border-bottom: 1px solid #e5e7eb; cursor: pointer;" onclick="showApprovalModal(${event.id})">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <strong>${event.title}</strong>
+                                    <p style="font-size: 0.85rem; color: #6b7280; margin: 5px 0 0 0;">
+                                        ${event.club?.name || 'Unknown Club'} • ${new Date(event.eventDate).toLocaleDateString()}
+                                    </p>
+                                </div>
+                                <span class="badge" style="background: #f59e0b; color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.75rem;">Pending</span>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } else if (pendingCard) {
+                pendingCard.style.display = 'none';
+            }
+        }
+    } catch (error) {
+        console.error('Error loading pending approvals:', error);
+    }
+}
+
+async function showApprovalModal(eventId) {
+    try {
+        const response = await fetch(`${API_URL}/events/${eventId}`, {
+            headers: getAuthHeaders()
+        });
+        
+        if (response.ok) {
+            const event = await response.json();
+            currentApprovalEventId = eventId;
+            
+            const detailsContainer = document.getElementById('approval-event-details');
+            detailsContainer.innerHTML = `
+                <div style="padding: 20px;">
+                    <h4>${event.title}</h4>
+                    <p><strong>Description:</strong> ${event.description || 'N/A'}</p>
+                    <p><strong>Date:</strong> ${new Date(event.eventDate).toLocaleString()}</p>
+                    <p><strong>Location:</strong> ${event.location || 'N/A'}</p>
+                    <p><strong>Expected Participants:</strong> ${event.participantsCount || 'N/A'}</p>
+                    <p><strong>Budget:</strong> ₹${event.budget || 0}</p>
+                    <p><strong>Created By:</strong> ${event.createdBy || 'Unknown'}</p>
+                    <p><strong>Status:</strong> <span class="badge" style="background: #f59e0b; color: white; padding: 4px 8px; border-radius: 12px;">${event.approvalStatus}</span></p>
+                </div>
+            `;
+            
+            document.getElementById('approval-modal').style.display = 'block';
+        }
+    } catch (error) {
+        console.error('Error loading event details:', error);
+        showNotification('error', 'Failed to load event details');
+    }
+}
+
+function closeApprovalModal() {
+    document.getElementById('approval-modal').style.display = 'none';
+    currentApprovalEventId = null;
+}
+
+async function approveCurrentEvent() {
+    if (!currentApprovalEventId) return;
+    
+    try {
+        const response = await fetch(`${API_URL}/events/${currentApprovalEventId}/approve?approvedBy=${currentUser.username}`, {
+            method: 'PUT',
+            headers: getAuthHeaders()
+        });
+        
+        if (response.ok) {
+            showNotification('success', 'Event approved successfully!');
+            closeApprovalModal();
+            await loadPendingApprovals();
+            await loadEvents();
+        } else {
+            throw new Error('Failed to approve event');
+        }
+    } catch (error) {
+        console.error('Error approving event:', error);
+        showNotification('error', 'Failed to approve event');
+    }
+}
+
+async function showRejectReason() {
+    const { value: reason } = await Swal.fire({
+        title: 'Reject Event',
+        input: 'textarea',
+        inputLabel: 'Rejection Reason',
+        inputPlaceholder: 'Enter the reason for rejection...',
+        inputAttributes: {
+            'aria-label': 'Enter the reason for rejection'
+        },
+        showCancelButton: true,
+        confirmButtonText: 'Reject Event',
+        confirmButtonColor: '#dc2626',
+        cancelButtonText: 'Cancel'
+    });
+    
+    if (reason) {
+        await rejectCurrentEvent(reason);
+    }
+}
+
+async function rejectCurrentEvent(reason) {
+    if (!currentApprovalEventId) return;
+    
+    try {
+        const response = await fetch(`${API_URL}/events/${currentApprovalEventId}/reject?rejectedBy=${currentUser.username}&reason=${encodeURIComponent(reason)}`, {
+            method: 'PUT',
+            headers: getAuthHeaders()
+        });
+        
+        if (response.ok) {
+            showNotification('success', 'Event rejected');
+            closeApprovalModal();
+            await loadPendingApprovals();
+            await loadEvents();
+        } else {
+            throw new Error('Failed to reject event');
+        }
+    } catch (error) {
+        console.error('Error rejecting event:', error);
+        showNotification('error', 'Failed to reject event');
+    }
+}
+
+// Pre-Event Report Functions
+function showPreReportModal(eventId, eventTitle) {
+    currentEventId = eventId;
+    document.getElementById('pre-report-event-id').value = eventId;
+    document.getElementById('pre-report-event-title').value = eventTitle;
+    document.getElementById('pre-report-content').value = '';
+    document.getElementById('pre-report-modal').style.display = 'block';
+}
+
+function closePreReportModal() {
+    document.getElementById('pre-report-modal').style.display = 'none';
+    currentEventId = null;
+}
+
+async function savePreReport(event) {
+    event.preventDefault();
+    
+    const eventId = document.getElementById('pre-report-event-id').value;
+    const report = document.getElementById('pre-report-content').value;
+    
+    try {
+        const response = await fetch(`${API_URL}/events/${eventId}/pre-report`, {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(report)
+        });
+        
+        if (response.ok) {
+            showNotification('success', 'Pre-event report submitted successfully!');
+            closePreReportModal();
+            await loadEvents();
+        } else {
+            throw new Error('Failed to save report');
+        }
+    } catch (error) {
+        console.error('Error saving pre-event report:', error);
+        showNotification('error', 'Failed to save report');
+    }
+}
+
+// Post-Event Report Functions
+function showPostReportModal(eventId, eventTitle) {
+    currentEventId = eventId;
+    document.getElementById('post-report-event-id').value = eventId;
+    document.getElementById('post-report-event-title').value = eventTitle;
+    document.getElementById('post-report-content').value = '';
+    document.getElementById('post-report-participants').value = '';
+    document.getElementById('post-report-expense').value = '';
+    document.getElementById('post-report-modal').style.display = 'block';
+}
+
+function closePostReportModal() {
+    document.getElementById('post-report-modal').style.display = 'none';
+    currentEventId = null;
+}
+
+async function savePostReport(event) {
+    event.preventDefault();
+    
+    const eventId = document.getElementById('post-report-event-id').value;
+    const report = document.getElementById('post-report-content').value;
+    const participants = document.getElementById('post-report-participants').value;
+    const expense = document.getElementById('post-report-expense').value;
+    
+    try {
+        // First update the event with participants and expense
+        const eventResponse = await fetch(`${API_URL}/events/${eventId}`, {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({
+                participantsCount: participants || 0,
+                actualExpense: expense || 0
+            })
+        });
+        
+        // Then save the post-event report
+        const reportResponse = await fetch(`${API_URL}/events/${eventId}/post-report`, {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(report)
+        });
+        
+        if (reportResponse.ok) {
+            showNotification('success', 'Post-event report submitted successfully!');
+            closePostReportModal();
+            await loadEvents();
+        } else {
+            throw new Error('Failed to save report');
+        }
+    } catch (error) {
+        console.error('Error saving post-event report:', error);
+        showNotification('error', 'Failed to save report');
+    }
+}
+

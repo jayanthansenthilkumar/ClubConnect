@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -60,5 +61,52 @@ public class EventService {
     
     public void deleteEvent(Long id) {
         eventRepository.deleteById(id);
+    }
+    
+    public Event approveEvent(Long id, String approvedBy) {
+        Event event = eventRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Event not found with id: " + id));
+        
+        event.setApprovalStatus("APPROVED");
+        event.setApprovedBy(approvedBy);
+        event.setApprovedAt(LocalDateTime.now());
+        event.setRejectionReason(null); // Clear any previous rejection reason
+        
+        return eventRepository.save(event);
+    }
+    
+    public Event rejectEvent(Long id, String rejectedBy, String reason) {
+        Event event = eventRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Event not found with id: " + id));
+        
+        event.setApprovalStatus("REJECTED");
+        event.setApprovedBy(rejectedBy);
+        event.setApprovedAt(LocalDateTime.now());
+        event.setRejectionReason(reason);
+        
+        return eventRepository.save(event);
+    }
+    
+    public Event addPreEventReport(Long id, String report) {
+        Event event = eventRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Event not found with id: " + id));
+        
+        event.setPreEventReport(report);
+        return eventRepository.save(event);
+    }
+    
+    public Event addPostEventReport(Long id, String report) {
+        Event event = eventRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Event not found with id: " + id));
+        
+        event.setPostEventReport(report);
+        if (event.getStatus().equals("SCHEDULED") || event.getStatus().equals("ONGOING")) {
+            event.setStatus("COMPLETED");
+        }
+        return eventRepository.save(event);
+    }
+    
+    public List<Event> getPendingEvents() {
+        return eventRepository.findByApprovalStatus("PENDING");
     }
 }

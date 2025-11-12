@@ -10,4 +10,5 @@ import java.util.List;
 public interface EventRepository extends JpaRepository<Event, Long> {
     List<Event> findByClubId(Long clubId);
     List<Event> findByStatus(String status);
+    List<Event> findByApprovalStatus(String approvalStatus);
 }
