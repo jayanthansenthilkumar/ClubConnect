@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodZe - Test Blocking</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1976d2;
+            margin-top: 0;
+        }
+        .section {
+            margin: 25px 0;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border-left: 4px solid #1976d2;
+        }
+        .test-links {
+            display: grid;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .test-link {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 15px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+        }
+        .test-link a {
+            color: #1976d2;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .test-link a:hover {
+            text-decoration: underline;
+        }
+        .status {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status.allowed {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        .status.blocked {
+            background: #ffebee;
+            color: #c62828;
+        }
+        button {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        button:hover {
+            background: #1565c0;
+        }
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #1976d2;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .warning-box {
+            background: #fff3e0;
+            border-left: 4px solid #f57c00;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        #results {
+            margin-top: 20px;
+            padding: 15px;
+            background: #fafafa;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 CodZe - Blocking Test Page</h1>
+        
+        <div class="info-box">
+            <strong>ℹ️ How to Use:</strong><br>
+            1. Make sure CodZe is enabled (toggle ON in extension popup)<br>
+            2. Click the "Check Rules" button to see current configuration<br>
+            3. Click links below to test if blocking works correctly<br>
+            4. Allowed sites should load normally, blocked sites should show blocked.html
+        </div>
+
+        <div class="section">
+            <h2>📋 Current Configuration</h2>
+            <button onclick="checkRules()">Check Rules</button>
+            <button onclick="checkAllowedSites()">Show Allowed Sites</button>
+            <div id="results"></div>
+        </div>
+
+        <div class="section">
+            <h2>✅ Test Allowed Sites (Should Work)</h2>
+            <div class="test-links">
+                <div class="test-link">
+                    <a href="https://wikipedia.org" target="_blank">Wikipedia</a>
+                    <span class="status allowed">SHOULD WORK ✓</span>
+                </div>
+                <div class="test-link">
+                    <a href="https://www.wikipedia.org" target="_blank">Wikipedia (www)</a>
+                    <span class="status allowed">SHOULD WORK ✓</span>
+                </div>
+                <div class="test-link">
+                    <a href="https://en.wikipedia.org" target="_blank">Wikipedia English</a>
+                    <span class="status allowed">SHOULD WORK ✓</span>
+                </div>
+                <div class="test-link">
+                    <a href="https://khanacademy.org" target="_blank">Khan Academy</a>
+                    <span class="status allowed">SHOULD WORK ✓</span>
+                </div>
+                <div class="test-link">
+                    <a href="https://stackoverflow.com" target="_blank">Stack Overflow</a>
+                    <span class="status allowed">SHOULD WORK ✓</span>
+                </div>
+                <div class="test-link">
+                    <a href="https://github.com" target="_blank">GitHub</a>
+                    <span class="status allowed">SHOULD WORK ✓</span>
+                </div>
+                <div class="test-link">
+                    <a href="https://www.youtube.com" target="_blank">YouTube</a>
+                    <span class="status allowed">SHOULD WORK ✓</span>
+                </div>
+                <div class="test-link">
+                    <a href="https://google.com" target="_blank">Google</a>
+                    <span class="status allowed">SHOULD WORK ✓</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>❌ Test Blocked Sites (Should Be Blocked)</h2>
+            <div class="warning-box">
+                <strong>⚠️ Expected Behavior:</strong> These links should redirect to blocked.html
+            </div>
+            <div class="test-links">
+                <div class="test-link">
+                    <a href="https://facebook.com" target="_blank">Facebook</a>
+                    <span class="status blocked">SHOULD BLOCK ✗</span>
+                </div>
+                <div class="test-link">
+                    <a href="https://twitter.com" target="_blank">Twitter</a>
+                    <span class="status blocked">SHOULD BLOCK ✗</span>
+                </div>
+                <div class="test-link">
+                    <a href="https://instagram.com" target="_blank">Instagram</a>
+                    <span class="status blocked">SHOULD BLOCK ✗</span>
+                </div>
+                <div class="test-link">
+                    <a href="https://reddit.com" target="_blank">Reddit</a>
+                    <span class="status blocked">SHOULD BLOCK ✗</span>
+                </div>
+                <div class="test-link">
+                    <a href="https://tiktok.com" target="_blank">TikTok</a>
+                    <span class="status blocked">SHOULD BLOCK ✗</span>
+                </div>
+                <div class="test-link">
+                    <a href="https://netflix.com" target="_blank">Netflix</a>
+                    <span class="status blocked">SHOULD BLOCK ✗</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔧 Troubleshooting</h2>
+            <ul>
+                <li><strong>Allowed sites are blocked:</strong> Check that CodZe is enabled and reload the extension</li>
+                <li><strong>Blocked sites are not blocked:</strong> Make sure CodZe is enabled (green toggle in popup)</li>
+                <li><strong>Extension not working:</strong> Go to chrome://extensions/ and reload CodZe</li>
+                <li><strong>Check console:</strong> Open DevTools (F12) and check for errors</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function checkRules() {
+            chrome.runtime.sendMessage({action: "checkRules"}, (response) => {
+                const results = document.getElementById('results');
+                if (response && response.rules) {
+                    results.innerHTML = '<strong>Current Rules:</strong><br>' + 
+                        JSON.stringify(response.rules, null, 2);
+                } else {
+                    results.innerHTML = '<strong style="color: red;">Error: Could not retrieve rules</strong>';
+                }
+            });
+        }
+
+        function checkAllowedSites() {
+            chrome.runtime.sendMessage({action: "testSite"}, (response) => {
+                const results = document.getElementById('results');
+                if (response && response.allowed) {
+                    results.innerHTML = '<strong>Allowed Sites (' + response.allowed.length + '):</strong><br>' + 
+                        response.allowed.map(site => '✓ ' + site).join('<br>');
+                } else {
+                    results.innerHTML = '<strong style="color: red;">Error: Could not retrieve allowed sites</strong>';
+                }
+            });
+        }
+
+        // Auto-check on load
+        window.onload = () => {
+            checkAllowedSites();
+        };
+    </script>
+</body>
+</html>
