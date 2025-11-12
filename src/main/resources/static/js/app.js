@@ -1082,6 +1082,12 @@ function displayEvents() {
                 </span>
             ` : ''}
             
+            ${event.status === 'SCHEDULED' && event.approvalStatus === 'APPROVED' && event.preEventReport ? `
+                <button class="btn btn-sm" style="background: #059669; color: white; margin-right: 5px;" onclick="markEventCompleted(${event.id})">
+                    <i class="ri-checkbox-circle-line"></i> Mark as Completed
+                </button>
+            ` : ''}
+            
             ${!event.postEventReport && event.status === 'COMPLETED' && event.approvalStatus === 'APPROVED' ? `
                 <button class="btn btn-sm" style="background: #8b5cf6; color: white; margin-right: 5px;" onclick="showPostReportModal(${event.id}, '${escapeHtml(event.title)}')">
                     <i class="ri-file-text-line"></i> Post-Event Report
@@ -1097,10 +1103,10 @@ function displayEvents() {
         const actionsHTML = `
             <div class="card-actions" style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px;">
                 ${reportButtons}
-                ${canEdit && event.approvalStatus !== 'APPROVED' ? `<button class="btn btn-edit" onclick="editEvent(${event.id})">
+                ${canEdit && event.approvalStatus !== 'APPROVED' && event.status !== 'COMPLETED' ? `<button class="btn btn-edit" onclick="editEvent(${event.id})">
                     <i class="ri-edit-line"></i> Edit
                 </button>` : ''}
-                ${canDelete ? `<button class="btn btn-danger" onclick="deleteEvent(${event.id})">
+                ${canDelete && event.status !== 'COMPLETED' ? `<button class="btn btn-danger" onclick="deleteEvent(${event.id})">
                     <i class="ri-delete-bin-line"></i> Delete
                 </button>` : ''}
                 ${isAdmin && event.approvalStatus === 'PENDING' ? `<button class="btn btn-success" onclick="showApprovalModal(${event.id})">
@@ -1667,6 +1673,49 @@ async function savePostReport(event) {
     } catch (error) {
         console.error('Error saving post-event report:', error);
         showNotification('error', 'Failed to save report');
+    }
+}
+
+// Mark Event as Completed
+async function markEventCompleted(eventId) {
+    const confirmed = await confirmAction(
+        'Mark Event as Completed?',
+        'This will change the event status to COMPLETED and allow you to submit the post-event report.',
+        'Yes, mark as completed!'
+    );
+    
+    if (!confirmed) return;
+    
+    try {
+        const event = events.find(e => e.id === eventId);
+        if (!event) {
+            showNotification('error', 'Event not found');
+            return;
+        }
+        
+        const response = await fetch(`${API_URL}/events/${eventId}`, {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({
+                ...event,
+                status: 'COMPLETED'
+            })
+        });
+        
+        if (response.status === 401) {
+            logout();
+            return;
+        }
+        
+        if (response.ok) {
+            await loadEvents();
+            showNotification('success', 'Event marked as completed! You can now submit the post-event report.');
+        } else {
+            throw new Error('Failed to update event status');
+        }
+    } catch (error) {
+        console.error('Error marking event as completed:', error);
+        showNotification('error', 'Failed to update event status');
     }
 }
 

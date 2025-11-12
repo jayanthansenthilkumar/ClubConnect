@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 HELP.md
 target/
 .mvn/wrapper/maven-wrapper.jar
@@ -15,10 +14,10 @@ target/
 .sts4-cache
 
 ### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
+# .idea
+# *.iws
+# *.iml
+# *.ipr
 
 ### NetBeans ###
 /nbproject/private/
@@ -50,4 +49,3 @@ build/
 *.tmp
 *.swp
 *~
->>>>>>> 7a871c62bccd534466bf01060060d47cd8dd6343

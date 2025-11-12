@@ -472,13 +472,13 @@
     <div id="club-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="club-modal-title">Add New Club</h3>
+                <h3 id="club-modal-title"><i class="ri-building-line"></i> Add New Club</h3>
                 <span class="close" onclick="closeClubModal()">&times;</span>
             </div>
             <form id="club-form" onsubmit="saveClub(event)">
                 <input type="hidden" id="club-id">
                 <div class="form-group">
-                    <label>Club Name *</label>
+                    <label><i class="ri-text"></i> Club Name *</label>
                     <input type="text" id="club-name" required>
                 </div>
                 <div class="form-group">
@@ -524,13 +524,13 @@
     <div id="member-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="member-modal-title">Add New Member</h3>
+                <h3 id="member-modal-title"><i class="ri-user-add-line"></i> Add New Member</h3>
                 <span class="close" onclick="closeMemberModal()">&times;</span>
             </div>
             <form id="member-form" onsubmit="saveMember(event)">
                 <input type="hidden" id="member-id">
                 <div class="form-group">
-                    <label>Member Name *</label>
+                    <label><i class="ri-user-line"></i> Member Name *</label>
                     <input type="text" id="member-name" required>
                 </div>
                 <div class="form-group">
@@ -561,37 +561,37 @@
     <div id="event-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="event-modal-title">Add New Event</h3>
+                <h3 id="event-modal-title"><i class="ri-calendar-event-line"></i> Add New Event</h3>
                 <span class="close" onclick="closeEventModal()">&times;</span>
             </div>
             <form id="event-form" onsubmit="saveEvent(event)">
                 <input type="hidden" id="event-id">
                 <div class="form-group">
-                    <label>Event Title *</label>
+                    <label><i class="ri-text"></i> Event Title *</label>
                     <input type="text" id="event-title" required>
                 </div>
                 <div class="form-group">
-                    <label>Description</label>
-                    <textarea id="event-description" rows="3"></textarea>
+                    <label><i class="ri-file-text-line"></i> Description</label>
+                    <textarea id="event-description" rows="3" placeholder="Enter event description..."></textarea>
                 </div>
                 <div class="form-group">
-                    <label>Event Date & Time *</label>
+                    <label><i class="ri-calendar-line"></i> Event Date & Time *</label>
                     <input type="datetime-local" id="event-date" required>
                 </div>
                 <div class="form-group">
-                    <label>Location</label>
-                    <input type="text" id="event-location">
+                    <label><i class="ri-map-pin-line"></i> Location</label>
+                    <input type="text" id="event-location" placeholder="Enter event location">
                 </div>
                 <div class="form-group">
-                    <label>Expected Participants</label>
-                    <input type="number" id="event-participants" min="0">
+                    <label><i class="ri-group-line"></i> Expected Participants</label>
+                    <input type="number" id="event-participants" min="0" placeholder="0">
                 </div>
                 <div class="form-group">
-                    <label>Budget (₹)</label>
-                    <input type="number" id="event-budget" step="0.01" min="0">
+                    <label><i class="ri-money-rupee-circle-line"></i> Budget (₹)</label>
+                    <input type="number" id="event-budget" step="0.01" min="0" placeholder="0.00">
                 </div>
                 <div class="form-group">
-                    <label>Status</label>
+                    <label><i class="ri-checkbox-circle-line"></i> Status</label>
                     <select id="event-status">
                         <option value="SCHEDULED">Scheduled</option>
                         <option value="ONGOING">Ongoing</option>
@@ -600,7 +600,7 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Club *</label>
+                    <label><i class="ri-building-line"></i> Club *</label>
                     <select id="event-club" required></select>
                 </div>
                 <div class="modal-footer">
@@ -615,22 +615,23 @@
     <div id="pre-report-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Pre-Event Report</h3>
+                <h3><i class="ri-file-list-3-line"></i> Pre-Event Report</h3>
                 <span class="close" onclick="closePreReportModal()">&times;</span>
             </div>
             <form id="pre-report-form" onsubmit="savePreReport(event)">
                 <input type="hidden" id="pre-report-event-id">
                 <div class="form-group">
-                    <label>Event Title</label>
+                    <label><i class="ri-calendar-event-line"></i> Event Title</label>
                     <input type="text" id="pre-report-event-title" readonly>
                 </div>
                 <div class="form-group">
-                    <label>Pre-Event Report *</label>
-                    <textarea id="pre-report-content" rows="8" required placeholder="Describe the preparation, planning, and expected outcomes..."></textarea>
+                    <label><i class="ri-file-text-line"></i> Pre-Event Report *</label>
+                    <textarea id="pre-report-content" rows="10" required placeholder="Describe the preparation, planning, expected outcomes, resources needed, team responsibilities, and timeline..."></textarea>
+                    <small>Include: Objectives, Planning Details, Resources, Team Assignments, Timeline</small>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" onclick="closePreReportModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Submit Report</button>
+                    <button type="submit" class="btn btn-primary"><i class="ri-send-plane-line"></i> Submit Report</button>
                 </div>
             </form>
         </div>
@@ -640,30 +641,31 @@
     <div id="post-report-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Post-Event Report</h3>
+                <h3><i class="ri-file-chart-line"></i> Post-Event Report</h3>
                 <span class="close" onclick="closePostReportModal()">&times;</span>
             </div>
             <form id="post-report-form" onsubmit="savePostReport(event)">
                 <input type="hidden" id="post-report-event-id">
                 <div class="form-group">
-                    <label>Event Title</label>
+                    <label><i class="ri-calendar-event-line"></i> Event Title</label>
                     <input type="text" id="post-report-event-title" readonly>
                 </div>
                 <div class="form-group">
-                    <label>Actual Participants</label>
-                    <input type="number" id="post-report-participants" min="0">
+                    <label><i class="ri-group-line"></i> Actual Participants</label>
+                    <input type="number" id="post-report-participants" min="0" placeholder="Enter actual number of participants">
                 </div>
                 <div class="form-group">
-                    <label>Actual Expense (₹)</label>
-                    <input type="number" id="post-report-expense" step="0.01" min="0">
+                    <label><i class="ri-money-rupee-circle-line"></i> Actual Expense (₹)</label>
+                    <input type="number" id="post-report-expense" step="0.01" min="0" placeholder="0.00">
                 </div>
                 <div class="form-group">
-                    <label>Post-Event Report *</label>
-                    <textarea id="post-report-content" rows="8" required placeholder="Describe what happened, outcomes, feedback, and learnings..."></textarea>
+                    <label><i class="ri-file-text-line"></i> Post-Event Report *</label>
+                    <textarea id="post-report-content" rows="10" required placeholder="Describe what happened, achievements, challenges faced, participant feedback, key learnings, and recommendations for future events..."></textarea>
+                    <small>Include: Outcomes, Achievements, Challenges, Feedback, Learnings, Recommendations</small>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" onclick="closePostReportModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Submit Report</button>
+                    <button type="submit" class="btn btn-primary"><i class="ri-send-plane-line"></i> Submit Report</button>
                 </div>
             </form>
         </div>
@@ -671,19 +673,21 @@
 
     <!-- Event Approval Modal (Admin Only) -->
     <div id="approval-modal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content modal-large">
             <div class="modal-header">
-                <h3>Event Approval</h3>
+                <h3><i class="ri-checkbox-circle-line"></i> Event Approval</h3>
                 <span class="close" onclick="closeApprovalModal()">&times;</span>
             </div>
             <div id="approval-event-details"></div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeApprovalModal()">Cancel</button>
-                <button type="button" class="btn btn-success" onclick="approveCurrentEvent()">
-                    <i class="ri-check-line"></i> Approve
+                <button type="button" class="btn btn-secondary" onclick="closeApprovalModal()">
+                    <i class="ri-close-line"></i> Cancel
                 </button>
                 <button type="button" class="btn btn-danger" onclick="showRejectReason()">
-                    <i class="ri-close-line"></i> Reject
+                    <i class="ri-close-circle-line"></i> Reject
+                </button>
+                <button type="button" class="btn btn-success" onclick="approveCurrentEvent()">
+                    <i class="ri-check-double-line"></i> Approve Event
                 </button>
             </div>
         </div>
