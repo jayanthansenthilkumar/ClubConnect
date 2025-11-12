@@ -4,34 +4,200 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ClubsConnect - Club Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
-    <header>
-        <nav class="navbar">
-            <div class="container">
-                <div class="nav-brand">
-                    <h1>ClubsConnect</h1>
-                </div>
-                <ul class="nav-menu">
-                    <li><a href="#" onclick="showSection('clubs')" class="nav-link active">Clubs</a></li>
-                    <li><a href="#" onclick="showSection('members')" class="nav-link">Members</a></li>
-                    <li><a href="#" onclick="showSection('events')" class="nav-link">Events</a></li>
-                </ul>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <button class="menu-toggle" onclick="toggleSidebar()">
+                <i class="ri-menu-line"></i>
+            </button>
+            <div class="brand">
+                <i class="ri-community-line"></i>
+                <h1>ClubsConnect</h1>
             </div>
-        </nav>
+        </div>
+        <div class="header-right">
+            <div class="search-box">
+                <i class="ri-search-line"></i>
+                <input type="text" placeholder="Search..." id="global-search">
+            </div>
+            <button class="notification-btn">
+                <i class="ri-notification-3-line"></i>
+                <span class="badge">3</span>
+            </button>
+            <div class="user-menu">
+                <div class="user-icon" onclick="toggleUserDropdown()">
+                    <img src="https://ui-avatars.com/api/?name=Admin+User&background=4F46E5&color=fff" alt="User">
+                </div>
+                <div class="user-dropdown" id="userDropdown">
+                    <div class="user-info">
+                        <img src="https://ui-avatars.com/api/?name=Admin+User&background=4F46E5&color=fff" alt="User">
+                        <div>
+                            <h4>Admin User</h4>
+                            <p>admin@clubsconnect.com</p>
+                        </div>
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <a href="#" class="dropdown-item">
+                        <i class="ri-user-line"></i>
+                        <span>My Profile</span>
+                    </a>
+                    <a href="#" class="dropdown-item">
+                        <i class="ri-settings-3-line"></i>
+                        <span>Settings</span>
+                    </a>
+                    <a href="#" class="dropdown-item">
+                        <i class="ri-question-line"></i>
+                        <span>Help Center</span>
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a href="#" class="dropdown-item">
+                        <i class="ri-logout-box-line"></i>
+                        <span>Logout</span>
+                    </a>
+                </div>
+            </div>
+        </div>
     </header>
 
-    <main class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-brand">
+                <i class="ri-community-line"></i>
+                <h2>ClubsConnect</h2>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="#" onclick="showSection('dashboard')" class="nav-item active">
+                <i class="ri-dashboard-line"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" onclick="showSection('clubs')" class="nav-item">
+                <i class="ri-building-line"></i>
+                <span>Clubs</span>
+            </a>
+            <a href="#" onclick="showSection('members')" class="nav-item">
+                <i class="ri-team-line"></i>
+                <span>Members</span>
+            </a>
+            <a href="#" onclick="showSection('events')" class="nav-item">
+                <i class="ri-calendar-event-line"></i>
+                <span>Events</span>
+            </a>
+            <a href="#" onclick="showSection('analytics')" class="nav-item">
+                <i class="ri-bar-chart-box-line"></i>
+                <span>Analytics</span>
+            </a>
+            <a href="#" onclick="showSection('messages')" class="nav-item">
+                <i class="ri-message-3-line"></i>
+                <span>Messages</span>
+                <span class="badge-small">5</span>
+            </a>
+            <a href="#" onclick="showSection('reports')" class="nav-item">
+                <i class="ri-file-text-line"></i>
+                <span>Reports</span>
+            </a>
+            <a href="#" onclick="showSection('settings')" class="nav-item">
+                <i class="ri-settings-4-line"></i>
+                <span>Settings</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Dashboard Section -->
+        <section id="dashboard-section" class="section active">
+            <div class="welcome-card">
+                <div class="welcome-content">
+                    <h2>Welcome back, Admin! 👋</h2>
+                    <p>Here's what's happening with your clubs today.</p>
+                </div>
+                <div class="welcome-actions">
+                    <button class="btn btn-primary" onclick="showClubModal()">
+                        <i class="ri-add-line"></i> Create Club
+                    </button>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <i class="ri-building-line"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="total-clubs">0</h3>
+                        <p>Total Clubs</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <i class="ri-team-line"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="total-members">0</h3>
+                        <p>Total Members</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon orange">
+                        <i class="ri-calendar-event-line"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="total-events">0</h3>
+                        <p>Upcoming Events</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon purple">
+                        <i class="ri-star-line"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="active-clubs">0</h3>
+                        <p>Active Clubs</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3><i class="ri-calendar-line"></i> Recent Events</h3>
+                        <a href="#" onclick="showSection('events')">View All</a>
+                    </div>
+                    <div class="card-body" id="recent-events"></div>
+                </div>
+
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3><i class="ri-pie-chart-line"></i> Club Categories</h3>
+                    </div>
+                    <div class="card-body" id="club-categories"></div>
+                </div>
+            </div>
+        </section>
+
         <!-- Clubs Section -->
-        <section id="clubs-section" class="section active">
+        <section id="clubs-section" class="section">
             <div class="section-header">
-                <h2>Clubs Management</h2>
-                <button class="btn btn-primary" onclick="showClubModal()">+ Add New Club</button>
+                <div>
+                    <h2><i class="ri-building-line"></i> Clubs Management</h2>
+                    <p>Manage and organize all clubs</p>
+                </div>
+                <button class="btn btn-primary" onclick="showClubModal()">
+                    <i class="ri-add-line"></i> Add New Club
+                </button>
             </div>
             
-            <div class="search-bar">
-                <input type="text" id="club-search" placeholder="Search clubs..." onkeyup="searchClubs()">
+            <div class="filter-bar">
+                <div class="search-input">
+                    <i class="ri-search-line"></i>
+                    <input type="text" id="club-search" placeholder="Search clubs..." onkeyup="searchClubs()">
+                </div>
                 <select id="category-filter" onchange="filterByCategory()">
                     <option value="">All Categories</option>
                     <option value="Sports">Sports</option>
@@ -48,11 +214,16 @@
         <!-- Members Section -->
         <section id="members-section" class="section">
             <div class="section-header">
-                <h2>Members Management</h2>
-                <button class="btn btn-primary" onclick="showMemberModal()">+ Add New Member</button>
+                <div>
+                    <h2><i class="ri-team-line"></i> Members Management</h2>
+                    <p>View and manage club members</p>
+                </div>
+                <button class="btn btn-primary" onclick="showMemberModal()">
+                    <i class="ri-user-add-line"></i> Add New Member
+                </button>
             </div>
             
-            <div class="table-container">
+            <div class="table-card">
                 <table id="members-table">
                     <thead>
                         <tr>
@@ -73,13 +244,220 @@
         <!-- Events Section -->
         <section id="events-section" class="section">
             <div class="section-header">
-                <h2>Events Management</h2>
-                <button class="btn btn-primary" onclick="showEventModal()">+ Add New Event</button>
+                <div>
+                    <h2><i class="ri-calendar-event-line"></i> Events Management</h2>
+                    <p>Schedule and manage club events</p>
+                </div>
+                <button class="btn btn-primary" onclick="showEventModal()">
+                    <i class="ri-calendar-check-line"></i> Add New Event
+                </button>
             </div>
             
             <div class="cards-grid" id="events-grid"></div>
         </section>
+
+        <!-- Analytics Section -->
+        <section id="analytics-section" class="section">
+            <div class="section-header">
+                <div>
+                    <h2><i class="ri-bar-chart-box-line"></i> Analytics</h2>
+                    <p>Club performance and statistics</p>
+                </div>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <i class="ri-group-line"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="avg-members">0</h3>
+                        <p>Avg Members per Club</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <i class="ri-calendar-check-line"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="completed-events">0</h3>
+                        <p>Completed Events</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon orange">
+                        <i class="ri-calendar-todo-line"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="scheduled-events">0</h3>
+                        <p>Scheduled Events</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon purple">
+                        <i class="ri-trophy-line"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Top Category</h3>
+                        <p id="top-category">Technology</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="analytics-content">
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3><i class="ri-bar-chart-line"></i> Club Distribution</h3>
+                    </div>
+                    <div class="card-body">
+                        <div id="category-distribution"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Messages Section -->
+        <section id="messages-section" class="section">
+            <div class="section-header">
+                <div>
+                    <h2><i class="ri-message-3-line"></i> Messages</h2>
+                    <p>Communication center</p>
+                </div>
+                <button class="btn btn-primary">
+                    <i class="ri-mail-send-line"></i> New Message
+                </button>
+            </div>
+            
+            <div class="messages-container">
+                <div class="message-card">
+                    <div class="message-avatar">
+                        <img src="https://ui-avatars.com/api/?name=John+Doe&background=4F46E5&color=fff" alt="John">
+                    </div>
+                    <div class="message-content">
+                        <h4>John Doe <span class="time">2 hours ago</span></h4>
+                        <p>Meeting scheduled for Tech Club next week</p>
+                    </div>
+                    <span class="badge-small">New</span>
+                </div>
+                <div class="message-card">
+                    <div class="message-avatar">
+                        <img src="https://ui-avatars.com/api/?name=Jane+Smith&background=10B981&color=fff" alt="Jane">
+                    </div>
+                    <div class="message-content">
+                        <h4>Jane Smith <span class="time">5 hours ago</span></h4>
+                        <p>Basketball tournament registration is now open</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Reports Section -->
+        <section id="reports-section" class="section">
+            <div class="section-header">
+                <div>
+                    <h2><i class="ri-file-text-line"></i> Reports</h2>
+                    <p>Generate and view reports</p>
+                </div>
+                <button class="btn btn-primary">
+                    <i class="ri-download-line"></i> Export Report
+                </button>
+            </div>
+            
+            <div class="reports-grid">
+                <div class="report-card">
+                    <i class="ri-file-chart-line"></i>
+                    <h4>Club Activity Report</h4>
+                    <p>Monthly club activities and engagement</p>
+                    <button class="btn btn-secondary">Generate</button>
+                </div>
+                <div class="report-card">
+                    <i class="ri-user-follow-line"></i>
+                    <h4>Member Attendance</h4>
+                    <p>Track member participation in events</p>
+                    <button class="btn btn-secondary">Generate</button>
+                </div>
+                <div class="report-card">
+                    <i class="ri-calendar-check-line"></i>
+                    <h4>Event Summary</h4>
+                    <p>Overview of all scheduled events</p>
+                    <button class="btn btn-secondary">Generate</button>
+                </div>
+                <div class="report-card">
+                    <i class="ri-funds-line"></i>
+                    <h4>Financial Report</h4>
+                    <p>Club budgets and expenses</p>
+                    <button class="btn btn-secondary">Generate</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Settings Section -->
+        <section id="settings-section" class="section">
+            <div class="section-header">
+                <div>
+                    <h2><i class="ri-settings-4-line"></i> Settings</h2>
+                    <p>Manage system preferences</p>
+                </div>
+            </div>
+            
+            <div class="settings-grid">
+                <div class="settings-card">
+                    <h3><i class="ri-user-settings-line"></i> Profile Settings</h3>
+                    <div class="setting-item">
+                        <label>Full Name</label>
+                        <input type="text" value="Admin User" class="form-control">
+                    </div>
+                    <div class="setting-item">
+                        <label>Email</label>
+                        <input type="email" value="admin@clubsconnect.com" class="form-control">
+                    </div>
+                    <button class="btn btn-primary">Update Profile</button>
+                </div>
+
+                <div class="settings-card">
+                    <h3><i class="ri-notification-3-line"></i> Notifications</h3>
+                    <div class="setting-toggle">
+                        <label>Email Notifications</label>
+                        <input type="checkbox" checked>
+                    </div>
+                    <div class="setting-toggle">
+                        <label>Event Reminders</label>
+                        <input type="checkbox" checked>
+                    </div>
+                    <div class="setting-toggle">
+                        <label>New Member Alerts</label>
+                        <input type="checkbox">
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <h3><i class="ri-shield-check-line"></i> Security</h3>
+                    <div class="setting-item">
+                        <label>Current Password</label>
+                        <input type="password" class="form-control">
+                    </div>
+                    <div class="setting-item">
+                        <label>New Password</label>
+                        <input type="password" class="form-control">
+                    </div>
+                    <button class="btn btn-primary">Change Password</button>
+                </div>
+            </div>
+        </section>
     </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; 2025 ClubsConnect. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="#"><i class="ri-information-line"></i> About</a>
+                <a href="#"><i class="ri-shield-check-line"></i> Privacy</a>
+                <a href="#"><i class="ri-file-text-line"></i> Terms</a>
+                <a href="#"><i class="ri-customer-service-line"></i> Support</a>
+            </div>
+        </div>
+    </footer>
 
     <!-- Club Modal -->
     <div id="club-modal" class="modal">
