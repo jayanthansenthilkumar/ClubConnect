@@ -6,14 +6,147 @@ let events = [];
 let currentClubId = null;
 let currentMemberId = null;
 let currentEventId = null;
+let currentUser = null;
+let userRole = null;
+let userClubId = null;
+
+// Authentication check
+function checkAuth() {
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    
+    if (!token || !userStr) {
+        window.location.href = '/login.html';
+        return false;
+    }
+    
+    try {
+        currentUser = JSON.parse(userStr);
+        userRole = currentUser.role;
+        userClubId = currentUser.clubId;
+        updateUserProfile();
+        applyRoleBasedRestrictions();
+        return true;
+    } catch (error) {
+        console.error('Error parsing user data:', error);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login.html';
+        return false;
+    }
+}
+
+// Apply role-based restrictions to UI
+function applyRoleBasedRestrictions() {
+    const isOverallHead = userRole === 'OVERALL_CLUB_HEAD';
+    const isCoordinator = userRole === 'CLUB_COORDINATOR';
+    const isPresident = userRole === 'CLUB_PRESIDENT';
+    
+    // Hide/show Add buttons based on role
+    const addClubBtn = document.getElementById('add-club-btn');
+    const addMemberBtn = document.getElementById('add-member-btn');
+    const addEventBtn = document.getElementById('add-event-btn');
+    
+    if (addClubBtn) {
+        addClubBtn.style.display = isOverallHead ? 'flex' : 'none';
+    }
+    
+    if (addMemberBtn) {
+        addMemberBtn.style.display = (isOverallHead || isCoordinator) ? 'flex' : 'none';
+    }
+    
+    if (addEventBtn) {
+        addEventBtn.style.display = (isOverallHead || isCoordinator || isPresident) ? 'flex' : 'none';
+    }
+    
+    // Hide certain sections for non-admin users
+    if (!isOverallHead) {
+        // Hide settings section for non-admin
+        const settingsLink = document.querySelector('[onclick*="showSection(\'settings\')"]');
+        if (settingsLink) {
+            settingsLink.parentElement.style.display = 'none';
+        }
+        
+        // Hide reports section for non-admin
+        const reportsLink = document.querySelector('[onclick*="showSection(\'reports\')"]');
+        if (reportsLink) {
+            reportsLink.parentElement.style.display = 'none';
+        }
+    }
+    
+    // Show role-based welcome message
+    updateWelcomeMessage();
+}
+
+// Update welcome message based on role
+function updateWelcomeMessage() {
+    const welcomeCard = document.querySelector('.welcome-card h2');
+    if (welcomeCard && currentUser) {
+        const roleMessages = {
+            'OVERALL_CLUB_HEAD': `Welcome back, ${currentUser.fullName}! 👋`,
+            'CLUB_COORDINATOR': `Welcome, ${currentUser.fullName}! Ready to coordinate?`,
+            'CLUB_PRESIDENT': `Welcome, ${currentUser.fullName}! Lead with excellence!`
+        };
+        welcomeCard.textContent = roleMessages[userRole] || `Welcome, ${currentUser.fullName}!`;
+    }
+}
+
+// Update user profile in header
+function updateUserProfile() {
+    const userNameElement = document.getElementById('user-name');
+    const userRoleElement = document.getElementById('user-role');
+    
+    if (userNameElement && currentUser) {
+        userNameElement.textContent = currentUser.fullName;
+    }
+    
+    if (userRoleElement && currentUser) {
+        const roleNames = {
+            'OVERALL_CLUB_HEAD': 'Overall Club Head',
+            'CLUB_COORDINATOR': 'Club Coordinator',
+            'CLUB_PRESIDENT': 'Club President'
+        };
+        userRoleElement.textContent = roleNames[currentUser.role] || currentUser.role;
+    }
+}
+
+// Logout function
+function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/login.html';
+}
+
+// Get auth headers
+function getAuthHeaders() {
+    const token = localStorage.getItem('token');
+    return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+    };
+}
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
+    // Check authentication first
+    if (!checkAuth()) {
+        return;
+    }
+    
     loadClubs();
     loadMembers();
     loadEvents();
     updateDashboardStats();
     initializeGlobalSearch();
+    
+    // Add logout handler
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            logout();
+        });
+    }
 });
 
 // Global Search
@@ -262,13 +395,37 @@ function displayCategoryDistribution(categories) {
 async function loadClubs() {
     try {
         showLoadingSpinner('clubs-grid');
-        const response = await fetch(`${API_URL}/clubs`);
+        const response = await fetch(`${API_URL}/clubs`, {
+            headers: getAuthHeaders()
+        });
+        
+        if (response.status === 401) {
+            logout();
+            return;
+        }
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         
-        clubs = await response.json();
+        let allClubs = await response.json();
+        
+        // Filter clubs based on user role
+        if (userRole === 'OVERALL_CLUB_HEAD') {
+            // Overall Club Head can see all clubs
+            clubs = allClubs;
+        } else if (userRole === 'CLUB_COORDINATOR' || userRole === 'CLUB_PRESIDENT') {
+            // Coordinators and Presidents can only see their assigned club
+            if (userClubId) {
+                clubs = allClubs.filter(club => club.id === userClubId);
+            } else {
+                clubs = [];
+                showNotification('error', 'No club assigned to your account');
+            }
+        } else {
+            clubs = allClubs;
+        }
+        
         displayClubs(clubs);
         populateClubSelects();
         updateDashboardStats();
@@ -287,15 +444,30 @@ function displayClubs(clubsToDisplay) {
             <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-light);">
                 <i class="ri-building-line" style="font-size: 4rem; margin-bottom: 1rem; display: block;"></i>
                 <h3 style="color: var(--text-secondary); margin-bottom: 0.5rem;">No clubs found</h3>
-                <p>Create your first club to get started!</p>
+                <p>${userRole === 'OVERALL_CLUB_HEAD' ? 'Create your first club to get started!' : 'No club assigned to your account.'}</p>
             </div>
         `;
         return;
     }
     
+    const canEdit = userRole === 'OVERALL_CLUB_HEAD' || userRole === 'CLUB_COORDINATOR';
+    const canDelete = userRole === 'OVERALL_CLUB_HEAD';
+    
     clubsToDisplay.forEach(club => {
         const card = document.createElement('div');
         card.className = 'card';
+        
+        const actionsHTML = (canEdit || canDelete) ? `
+            <div class="card-actions">
+                ${canEdit ? `<button class="btn btn-edit" onclick="editClub(${club.id})">
+                    <i class="ri-edit-line"></i> Edit
+                </button>` : ''}
+                ${canDelete ? `<button class="btn btn-danger" onclick="deleteClub(${club.id})">
+                    <i class="ri-delete-bin-line"></i> Delete
+                </button>` : ''}
+            </div>
+        ` : '';
+        
         card.innerHTML = `
             <h3><i class="ri-building-line"></i> ${escapeHtml(club.name)}</h3>
             <span class="card-category">${escapeHtml(club.category)}</span>
@@ -306,14 +478,7 @@ function displayClubs(clubsToDisplay) {
                 <p><strong><i class="ri-phone-line"></i> Phone:</strong> ${escapeHtml(club.phone) || 'N/A'}</p>
                 <p><strong><i class="ri-calendar-line"></i> Meeting:</strong> ${escapeHtml(club.meetingSchedule) || 'N/A'}</p>
             </div>
-            <div class="card-actions">
-                <button class="btn btn-edit" onclick="editClub(${club.id})">
-                    <i class="ri-edit-line"></i> Edit
-                </button>
-                <button class="btn btn-danger" onclick="deleteClub(${club.id})">
-                    <i class="ri-delete-bin-line"></i> Delete
-                </button>
-            </div>
+            ${actionsHTML}
         `;
         grid.appendChild(card);
     });
@@ -398,15 +563,20 @@ async function saveClub(event) {
         if (currentClubId) {
             response = await fetch(`${API_URL}/clubs/${currentClubId}`, {
                 method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
+                headers: getAuthHeaders(),
                 body: JSON.stringify(club)
             });
         } else {
             response = await fetch(`${API_URL}/clubs`, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: getAuthHeaders(),
                 body: JSON.stringify(club)
             });
+        }
+        
+        if (response.status === 401) {
+            logout();
+            return;
         }
         
         if (response.ok) {
@@ -426,14 +596,24 @@ async function saveClub(event) {
 }
 
 async function deleteClub(id) {
-    if (!confirm('Are you sure you want to delete this club? This will also delete all associated members and events.')) {
-        return;
-    }
+    const confirmed = await confirmAction(
+        'Delete Club?',
+        'Are you sure you want to delete this club? This will also delete all associated members and events.',
+        'Yes, delete it!'
+    );
+    
+    if (!confirmed) return;
     
     try {
         const response = await fetch(`${API_URL}/clubs/${id}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: getAuthHeaders()
         });
+        
+        if (response.status === 401) {
+            logout();
+            return;
+        }
         
         if (response.ok) {
             await Promise.all([loadClubs(), loadMembers(), loadEvents()]);
@@ -452,13 +632,36 @@ async function deleteClub(id) {
 async function loadMembers() {
     try {
         showLoadingSpinner('members-tbody');
-        const response = await fetch(`${API_URL}/members`);
+        const response = await fetch(`${API_URL}/members`, {
+            headers: getAuthHeaders()
+        });
+        
+        if (response.status === 401) {
+            logout();
+            return;
+        }
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         
-        members = await response.json();
+        let allMembers = await response.json();
+        
+        // Filter members based on user role
+        if (userRole === 'OVERALL_CLUB_HEAD') {
+            // Overall Club Head can see all members
+            members = allMembers;
+        } else if (userRole === 'CLUB_COORDINATOR' || userRole === 'CLUB_PRESIDENT') {
+            // Coordinators and Presidents can only see members of their club
+            if (userClubId) {
+                members = allMembers.filter(member => member.club && member.club.id === userClubId);
+            } else {
+                members = [];
+            }
+        } else {
+            members = allMembers;
+        }
+        
         displayMembers();
         updateDashboardStats();
     } catch (error) {
@@ -477,16 +680,31 @@ function displayMembers() {
                 <td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-light);">
                     <i class="ri-team-line" style="font-size: 4rem; margin-bottom: 1rem; display: block;"></i>
                     <h4 style="color: var(--text-secondary); margin-bottom: 0.5rem;">No members found</h4>
-                    <p>Add your first member to get started!</p>
+                    <p>${userRole === 'OVERALL_CLUB_HEAD' ? 'Add your first member to get started!' : 'No members in your club yet.'}</p>
                 </td>
             </tr>
         `;
         return;
     }
     
+    const canEdit = userRole === 'OVERALL_CLUB_HEAD' || userRole === 'CLUB_COORDINATOR';
+    const canDelete = userRole === 'OVERALL_CLUB_HEAD';
+    
     members.forEach(member => {
         const club = clubs.find(c => c.id === member.club?.id);
         const tr = document.createElement('tr');
+        
+        const actionsHTML = (canEdit || canDelete) ? `
+            <td>
+                ${canEdit ? `<button class="btn btn-edit" onclick="editMember(${member.id})">
+                    <i class="ri-edit-line"></i>
+                </button>` : ''}
+                ${canDelete ? `<button class="btn btn-danger" onclick="deleteMember(${member.id})">
+                    <i class="ri-delete-bin-line"></i>
+                </button>` : ''}
+            </td>
+        ` : '<td>-</td>';
+        
         tr.innerHTML = `
             <td><i class="ri-user-line"></i> ${escapeHtml(member.name)}</td>
             <td><i class="ri-mail-line"></i> ${escapeHtml(member.email)}</td>
@@ -494,14 +712,7 @@ function displayMembers() {
             <td><span style="padding: 0.25rem 0.75rem; background: var(--bg-color); border-radius: 1rem; font-size: 0.85rem;">${escapeHtml(member.role) || 'Member'}</span></td>
             <td>${club ? escapeHtml(club.name) : 'N/A'}</td>
             <td>${new Date(member.joinDate).toLocaleDateString()}</td>
-            <td>
-                <button class="btn btn-edit" onclick="editMember(${member.id})">
-                    <i class="ri-edit-line"></i>
-                </button>
-                <button class="btn btn-danger" onclick="deleteMember(${member.id})">
-                    <i class="ri-delete-bin-line"></i>
-                </button>
-            </td>
+            ${actionsHTML}
         `;
         tbody.appendChild(tr);
     });
@@ -584,15 +795,20 @@ async function saveMember(event) {
         if (currentMemberId) {
             response = await fetch(`${API_URL}/members/${currentMemberId}`, {
                 method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
+                headers: getAuthHeaders(),
                 body: JSON.stringify(member)
             });
         } else {
             response = await fetch(`${API_URL}/members/club/${clubId}`, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: getAuthHeaders(),
                 body: JSON.stringify(member)
             });
+        }
+        
+        if (response.status === 401) {
+            logout();
+            return;
         }
         
         if (response.ok) {
@@ -612,14 +828,24 @@ async function saveMember(event) {
 }
 
 async function deleteMember(id) {
-    if (!confirm('Are you sure you want to delete this member?')) {
-        return;
-    }
+    const confirmed = await confirmAction(
+        'Delete Member?',
+        'Are you sure you want to delete this member?',
+        'Yes, delete it!'
+    );
+    
+    if (!confirmed) return;
     
     try {
         const response = await fetch(`${API_URL}/members/${id}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: getAuthHeaders()
         });
+        
+        if (response.status === 401) {
+            logout();
+            return;
+        }
         
         if (response.ok) {
             await loadMembers();
@@ -638,13 +864,36 @@ async function deleteMember(id) {
 async function loadEvents() {
     try {
         showLoadingSpinner('events-grid');
-        const response = await fetch(`${API_URL}/events`);
+        const response = await fetch(`${API_URL}/events`, {
+            headers: getAuthHeaders()
+        });
+        
+        if (response.status === 401) {
+            logout();
+            return;
+        }
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         
-        events = await response.json();
+        let allEvents = await response.json();
+        
+        // Filter events based on user role
+        if (userRole === 'OVERALL_CLUB_HEAD') {
+            // Overall Club Head can see all events
+            events = allEvents;
+        } else if (userRole === 'CLUB_COORDINATOR' || userRole === 'CLUB_PRESIDENT') {
+            // Coordinators and Presidents can only see events of their club
+            if (userClubId) {
+                events = allEvents.filter(event => event.club && event.club.id === userClubId);
+            } else {
+                events = [];
+            }
+        } else {
+            events = allEvents;
+        }
+        
         displayEvents();
         updateDashboardStats();
     } catch (error) {
@@ -662,16 +911,31 @@ function displayEvents() {
             <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-light);">
                 <i class="ri-calendar-event-line" style="font-size: 4rem; margin-bottom: 1rem; display: block;"></i>
                 <h3 style="color: var(--text-secondary); margin-bottom: 0.5rem;">No events found</h3>
-                <p>Schedule your first event to get started!</p>
+                <p>${userRole === 'OVERALL_CLUB_HEAD' ? 'Schedule your first event to get started!' : 'No events scheduled for your club.'}</p>
             </div>
         `;
         return;
     }
     
+    const canEdit = userRole !== 'CLUB_PRESIDENT';
+    const canDelete = userRole === 'OVERALL_CLUB_HEAD';
+    
     events.forEach(event => {
         const club = clubs.find(c => c.id === event.club?.id);
         const card = document.createElement('div');
         card.className = 'event-card';
+        
+        const actionsHTML = (canEdit || canDelete) ? `
+            <div class="card-actions">
+                ${canEdit ? `<button class="btn btn-edit" onclick="editEvent(${event.id})">
+                    <i class="ri-edit-line"></i> Edit
+                </button>` : ''}
+                ${canDelete ? `<button class="btn btn-danger" onclick="deleteEvent(${event.id})">
+                    <i class="ri-delete-bin-line"></i> Delete
+                </button>` : ''}
+            </div>
+        ` : '';
+        
         card.innerHTML = `
             <span class="event-status ${event.status}">${event.status}</span>
             <h3><i class="ri-calendar-check-line"></i> ${escapeHtml(event.title)}</h3>
@@ -681,14 +945,7 @@ function displayEvents() {
                 <p><strong><i class="ri-map-pin-line"></i> Location:</strong> ${escapeHtml(event.location) || 'N/A'}</p>
                 <p><strong><i class="ri-building-line"></i> Club:</strong> ${club ? escapeHtml(club.name) : 'N/A'}</p>
             </div>
-            <div class="card-actions">
-                <button class="btn btn-edit" onclick="editEvent(${event.id})">
-                    <i class="ri-edit-line"></i> Edit
-                </button>
-                <button class="btn btn-danger" onclick="deleteEvent(${event.id})">
-                    <i class="ri-delete-bin-line"></i> Delete
-                </button>
-            </div>
+            ${actionsHTML}
         `;
         grid.appendChild(card);
     });
@@ -761,15 +1018,20 @@ async function saveEvent(event) {
         if (currentEventId) {
             response = await fetch(`${API_URL}/events/${currentEventId}`, {
                 method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
+                headers: getAuthHeaders(),
                 body: JSON.stringify(eventData)
             });
         } else {
             response = await fetch(`${API_URL}/events/club/${clubId}`, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: getAuthHeaders(),
                 body: JSON.stringify(eventData)
             });
+        }
+        
+        if (response.status === 401) {
+            logout();
+            return;
         }
         
         if (response.ok) {
@@ -789,14 +1051,24 @@ async function saveEvent(event) {
 }
 
 async function deleteEvent(id) {
-    if (!confirm('Are you sure you want to delete this event?')) {
-        return;
-    }
+    const confirmed = await confirmAction(
+        'Delete Event?',
+        'Are you sure you want to delete this event?',
+        'Yes, delete it!'
+    );
+    
+    if (!confirmed) return;
     
     try {
         const response = await fetch(`${API_URL}/events/${id}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: getAuthHeaders()
         });
+        
+        if (response.status === 401) {
+            logout();
+            return;
+        }
         
         if (response.ok) {
             await loadEvents();
@@ -849,61 +1121,41 @@ function showError(elementId, message) {
     }
 }
 
-// Notification System
+// Notification System using SweetAlert2
 function showNotification(type, message) {
-    // Remove existing notifications
-    const existing = document.querySelector('.notification');
-    if (existing) {
-        existing.remove();
-    }
+    const iconType = type === 'success' ? 'success' : 'error';
+    const title = type === 'success' ? 'Success!' : 'Error!';
     
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
+    Swal.fire({
+        icon: iconType,
+        title: title,
+        text: message,
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer);
+            toast.addEventListener('mouseleave', Swal.resumeTimer);
+        }
+    });
+}
+
+// Confirmation dialog using SweetAlert2
+async function confirmAction(title, text, confirmButtonText = 'Yes, delete it!') {
+    const result = await Swal.fire({
+        title: title,
+        text: text,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: confirmButtonText,
+        cancelButtonText: 'Cancel'
+    });
     
-    const icon = type === 'success' ? 'ri-check-line' : 'ri-error-warning-line';
-    const bgColor = type === 'success' ? 'var(--success-color)' : 'var(--danger-color)';
-    
-    notification.innerHTML = `
-        <i class="${icon}"></i>
-        <span>${escapeHtml(message)}</span>
-        <button onclick="this.parentElement.remove()">
-            <i class="ri-close-line"></i>
-        </button>
-    `;
-    
-    notification.style.cssText = `
-        position: fixed;
-        top: calc(var(--header-height) + 1rem);
-        right: 1rem;
-        background: ${bgColor};
-        color: white;
-        padding: 1rem 1.5rem;
-        border-radius: 0.5rem;
-        box-shadow: var(--shadow-lg);
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        z-index: 10000;
-        animation: slideInRight 0.3s ease;
-    `;
-    
-    notification.querySelector('button').style.cssText = `
-        background: none;
-        border: none;
-        color: white;
-        cursor: pointer;
-        font-size: 1.2rem;
-        padding: 0;
-        display: flex;
-        align-items: center;
-    `;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        notification.style.animation = 'slideOutRight 0.3s ease';
-        setTimeout(() => notification.remove(), 300);
-    }, 5000);
+    return result.isConfirmed;
 }
 
 // Add animation styles

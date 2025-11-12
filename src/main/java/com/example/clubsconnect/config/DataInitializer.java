@@ -3,11 +3,14 @@ package com.example.clubsconnect.config;
 import com.example.clubsconnect.model.Club;
 import com.example.clubsconnect.model.Event;
 import com.example.clubsconnect.model.Member;
+import com.example.clubsconnect.model.User;
 import com.example.clubsconnect.repository.ClubRepository;
 import com.example.clubsconnect.repository.EventRepository;
 import com.example.clubsconnect.repository.MemberRepository;
+import com.example.clubsconnect.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -23,6 +26,12 @@ public class DataInitializer implements CommandLineRunner {
     
     @Autowired
     private EventRepository eventRepository;
+    
+    @Autowired
+    private UserRepository userRepository;
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
     
     @Override
     public void run(String... args) throws Exception {
@@ -110,7 +119,120 @@ public class DataInitializer implements CommandLineRunner {
             event3.setClub(artsClub);
             eventRepository.save(event3);
             
-            System.out.println("Sample data initialized successfully!");
+            System.out.println("Sample clubs, members, and events created!");
+        }
+        
+        // Initialize default users if none exist
+        if (userRepository.count() == 0) {
+            System.out.println("Initializing default users...");
+            
+            // Create Overall Club Head
+            User overallHead = new User();
+            overallHead.setUsername("admin");
+            overallHead.setEmail("admin@clubsconnect.com");
+            overallHead.setPassword(passwordEncoder.encode("admin123"));
+            overallHead.setFullName("Admin User");
+            overallHead.setRole(User.UserRole.OVERALL_CLUB_HEAD);
+            overallHead.setPhoneNumber("999-999-9999");
+            overallHead.setDepartment("Administration");
+            overallHead.setActive(true);
+            userRepository.save(overallHead);
+            
+            // Create Club Coordinators for each club
+            Club techClub = clubRepository.findByCategory("Technology").stream().findFirst().orElse(null);
+            if (techClub != null) {
+                User techCoordinator = new User();
+                techCoordinator.setUsername("tech_coordinator");
+                techCoordinator.setEmail("coordinator@techclub.com");
+                techCoordinator.setPassword(passwordEncoder.encode("tech123"));
+                techCoordinator.setFullName("Tech Coordinator");
+                techCoordinator.setRole(User.UserRole.CLUB_COORDINATOR);
+                techCoordinator.setClub(techClub);
+                techCoordinator.setPhoneNumber("111-111-1111");
+                techCoordinator.setDepartment("Technology");
+                techCoordinator.setActive(true);
+                userRepository.save(techCoordinator);
+                
+                // Create Club President for Tech Club
+                User techPresident = new User();
+                techPresident.setUsername("john_doe");
+                techPresident.setEmail("john@techclub.com");
+                techPresident.setPassword(passwordEncoder.encode("president123"));
+                techPresident.setFullName("John Doe");
+                techPresident.setRole(User.UserRole.CLUB_PRESIDENT);
+                techPresident.setClub(techClub);
+                techPresident.setPhoneNumber("123-456-7890");
+                techPresident.setDepartment("Computer Science");
+                techPresident.setActive(true);
+                userRepository.save(techPresident);
+            }
+            
+            Club sportsClub = clubRepository.findByCategory("Sports").stream().findFirst().orElse(null);
+            if (sportsClub != null) {
+                User sportsCoordinator = new User();
+                sportsCoordinator.setUsername("sports_coordinator");
+                sportsCoordinator.setEmail("coordinator@sportsclub.com");
+                sportsCoordinator.setPassword(passwordEncoder.encode("sports123"));
+                sportsCoordinator.setFullName("Sports Coordinator");
+                sportsCoordinator.setRole(User.UserRole.CLUB_COORDINATOR);
+                sportsCoordinator.setClub(sportsClub);
+                sportsCoordinator.setPhoneNumber("222-222-2222");
+                sportsCoordinator.setDepartment("Physical Education");
+                sportsCoordinator.setActive(true);
+                userRepository.save(sportsCoordinator);
+                
+                // Create Club President for Sports Club
+                User sportsPresident = new User();
+                sportsPresident.setUsername("jane_smith");
+                sportsPresident.setEmail("jane@sportsclub.com");
+                sportsPresident.setPassword(passwordEncoder.encode("president123"));
+                sportsPresident.setFullName("Jane Smith");
+                sportsPresident.setRole(User.UserRole.CLUB_PRESIDENT);
+                sportsPresident.setClub(sportsClub);
+                sportsPresident.setPhoneNumber("123-456-7891");
+                sportsPresident.setDepartment("Sports Management");
+                sportsPresident.setActive(true);
+                userRepository.save(sportsPresident);
+            }
+            
+            Club artsClub = clubRepository.findByCategory("Arts").stream().findFirst().orElse(null);
+            if (artsClub != null) {
+                User artsCoordinator = new User();
+                artsCoordinator.setUsername("arts_coordinator");
+                artsCoordinator.setEmail("coordinator@artsclub.com");
+                artsCoordinator.setPassword(passwordEncoder.encode("arts123"));
+                artsCoordinator.setFullName("Arts Coordinator");
+                artsCoordinator.setRole(User.UserRole.CLUB_COORDINATOR);
+                artsCoordinator.setClub(artsClub);
+                artsCoordinator.setPhoneNumber("333-333-3333");
+                artsCoordinator.setDepartment("Fine Arts");
+                artsCoordinator.setActive(true);
+                userRepository.save(artsCoordinator);
+                
+                // Create Club President for Arts Club
+                User artsPresident = new User();
+                artsPresident.setUsername("alice_johnson");
+                artsPresident.setEmail("alice@artsclub.com");
+                artsPresident.setPassword(passwordEncoder.encode("president123"));
+                artsPresident.setFullName("Alice Johnson");
+                artsPresident.setRole(User.UserRole.CLUB_PRESIDENT);
+                artsPresident.setClub(artsClub);
+                artsPresident.setPhoneNumber("123-456-7892");
+                artsPresident.setDepartment("Visual Arts");
+                artsPresident.setActive(true);
+                userRepository.save(artsPresident);
+            }
+            
+            System.out.println("Default users created!");
+            System.out.println("=== Login Credentials ===");
+            System.out.println("Overall Club Head: admin / admin123");
+            System.out.println("Tech Coordinator: tech_coordinator / tech123");
+            System.out.println("Tech President: john_doe / president123");
+            System.out.println("Sports Coordinator: sports_coordinator / sports123");
+            System.out.println("Sports President: jane_smith / president123");
+            System.out.println("Arts Coordinator: arts_coordinator / arts123");
+            System.out.println("Arts President: alice_johnson / president123");
+            System.out.println("========================");
         }
     }
 }

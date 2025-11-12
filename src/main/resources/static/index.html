@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ClubsConnect - Club Management System</title>
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
@@ -36,8 +37,8 @@
                     <div class="user-info">
                         <img src="https://ui-avatars.com/api/?name=Admin+User&background=4F46E5&color=fff" alt="User">
                         <div>
-                            <h4>Admin User</h4>
-                            <p>admin@clubsconnect.com</p>
+                            <h4 id="user-name">Admin User</h4>
+                            <p id="user-role">Overall Club Head</p>
                         </div>
                     </div>
                     <div class="dropdown-divider"></div>
@@ -54,7 +55,7 @@
                         <span>Help Center</span>
                     </a>
                     <div class="dropdown-divider"></div>
-                    <a href="#" class="dropdown-item">
+                    <a href="#" class="dropdown-item" id="logout-btn">
                         <i class="ri-logout-box-line"></i>
                         <span>Logout</span>
                     </a>
@@ -188,7 +189,7 @@
                     <h2><i class="ri-building-line"></i> Clubs Management</h2>
                     <p>Manage and organize all clubs</p>
                 </div>
-                <button class="btn btn-primary" onclick="showClubModal()">
+                <button class="btn btn-primary" id="add-club-btn" onclick="showClubModal()">
                     <i class="ri-add-line"></i> Add New Club
                 </button>
             </div>
@@ -218,7 +219,7 @@
                     <h2><i class="ri-team-line"></i> Members Management</h2>
                     <p>View and manage club members</p>
                 </div>
-                <button class="btn btn-primary" onclick="showMemberModal()">
+                <button class="btn btn-primary" id="add-member-btn" onclick="showMemberModal()">
                     <i class="ri-user-add-line"></i> Add New Member
                 </button>
             </div>
@@ -248,7 +249,7 @@
                     <h2><i class="ri-calendar-event-line"></i> Events Management</h2>
                     <p>Schedule and manage club events</p>
                 </div>
-                <button class="btn btn-primary" onclick="showEventModal()">
+                <button class="btn btn-primary" id="add-event-btn" onclick="showEventModal()">
                     <i class="ri-calendar-check-line"></i> Add New Event
                 </button>
             </div>
@@ -594,6 +595,7 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="/js/app.js"></script>
 </body>
 </html>
