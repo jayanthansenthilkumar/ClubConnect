@@ -66,8 +66,14 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/member/login").permitAll()
                 .requestMatchers("/", "/index.html", "/login.html", "/css/**", "/js/**", "/images/**").permitAll()
-                .requestMatchers("/api/clubs/**", "/api/members/**", "/api/events/**").authenticated()
+                .requestMatchers("/api/clubs/**").authenticated()
+                .requestMatchers("/api/members/**").authenticated()
+                .requestMatchers("/api/events/**").authenticated()
+                .requestMatchers("/api/attendance/**").authenticated()
+                .requestMatchers("/api/winners/**").authenticated()
+                .requestMatchers("/api/reports/**").authenticated()
                 .anyRequest().authenticated()
             );
         

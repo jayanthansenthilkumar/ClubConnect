@@ -73,6 +73,12 @@ public class DataInitializer implements CommandLineRunner {
             member1.setEmail("bob@example.com");
             member1.setPhone("555-0001");
             member1.setRole("Vice President");
+            member1.setStudentId("STU001");
+            member1.setAcademicYear("2024-2025");
+            member1.setDepartment("Computer Science");
+            member1.setMembershipStatus(Member.MembershipStatus.ACTIVE);
+            member1.setUsername("bob.wilson001");
+            member1.setPassword(passwordEncoder.encode("password123"));
             member1.setClub(techClub);
             memberRepository.save(member1);
             
@@ -81,6 +87,12 @@ public class DataInitializer implements CommandLineRunner {
             member2.setEmail("carol@example.com");
             member2.setPhone("555-0002");
             member2.setRole("Treasurer");
+            member2.setStudentId("STU002");
+            member2.setAcademicYear("2024-2025");
+            member2.setDepartment("Information Technology");
+            member2.setMembershipStatus(Member.MembershipStatus.ACTIVE);
+            member2.setUsername("carol.davis002");
+            member2.setPassword(passwordEncoder.encode("password123"));
             member2.setClub(techClub);
             memberRepository.save(member2);
             
@@ -89,6 +101,12 @@ public class DataInitializer implements CommandLineRunner {
             member3.setEmail("david@example.com");
             member3.setPhone("555-0003");
             member3.setRole("Team Captain");
+            member3.setStudentId("STU003");
+            member3.setAcademicYear("2024-2025");
+            member3.setDepartment("Physical Education");
+            member3.setMembershipStatus(Member.MembershipStatus.ACTIVE);
+            member3.setUsername("david.brown003");
+            member3.setPassword(passwordEncoder.encode("password123"));
             member3.setClub(sportsClub);
             memberRepository.save(member3);
             
@@ -126,17 +144,17 @@ public class DataInitializer implements CommandLineRunner {
         if (userRepository.count() == 0) {
             System.out.println("Initializing default users...");
             
-            // Create Overall Club Head
-            User overallHead = new User();
-            overallHead.setUsername("admin");
-            overallHead.setEmail("admin@clubsconnect.com");
-            overallHead.setPassword(passwordEncoder.encode("admin123"));
-            overallHead.setFullName("Admin User");
-            overallHead.setRole(User.UserRole.OVERALL_CLUB_HEAD);
-            overallHead.setPhoneNumber("999-999-9999");
-            overallHead.setDepartment("Administration");
-            overallHead.setActive(true);
-            userRepository.save(overallHead);
+            // Create Admin User
+            User admin = new User();
+            admin.setUsername("admin");
+            admin.setEmail("admin@clubsconnect.com");
+            admin.setPassword(passwordEncoder.encode("admin123"));
+            admin.setFullName("Admin User");
+            admin.setRole(User.UserRole.ADMIN);
+            admin.setPhoneNumber("999-999-9999");
+            admin.setDepartment("Administration");
+            admin.setActive(true);
+            userRepository.save(admin);
             
             // Create Club Coordinators for each club
             Club techClub = clubRepository.findByCategory("Technology").stream().findFirst().orElse(null);
@@ -225,7 +243,7 @@ public class DataInitializer implements CommandLineRunner {
             
             System.out.println("Default users created!");
             System.out.println("=== Login Credentials ===");
-            System.out.println("Overall Club Head: admin / admin123");
+            System.out.println("Admin: admin / admin123");
             System.out.println("Tech Coordinator: tech_coordinator / tech123");
             System.out.println("Tech President: john_doe / president123");
             System.out.println("Sports Coordinator: sports_coordinator / sports123");

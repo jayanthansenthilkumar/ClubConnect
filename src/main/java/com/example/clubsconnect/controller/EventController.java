@@ -5,9 +5,12 @@ import com.example.clubsconnect.service.EventService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/events")
@@ -18,6 +21,7 @@ public class EventController {
     private EventService eventService;
     
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'CLUB_COORDINATOR', 'CLUB_PRESIDENT')")
     public ResponseEntity<List<Event>> getAllEvents() {
         return ResponseEntity.ok(eventService.getAllEvents());
     }
@@ -40,9 +44,11 @@ public class EventController {
     }
     
     @PostMapping("/club/{clubId}")
-    public ResponseEntity<Event> createEvent(@PathVariable Long clubId, @RequestBody Event event) {
+    @PreAuthorize("hasAnyRole('ADMIN', 'CLUB_COORDINATOR', 'CLUB_PRESIDENT')")
+    public ResponseEntity<Event> createEvent(@PathVariable Long clubId, @RequestBody Event event, Principal principal) {
         try {
-            Event createdEvent = eventService.createEvent(clubId, event);
+            String username = principal != null ? principal.getName() : "system";
+            Event createdEvent = eventService.createEvent(clubId, event, username);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdEvent);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
@@ -50,6 +56,7 @@ public class EventController {
     }
     
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CLUB_COORDINATOR', 'CLUB_PRESIDENT')")
     public ResponseEntity<Event> updateEvent(@PathVariable Long id, @RequestBody Event event) {
         try {
             Event updatedEvent = eventService.updateEvent(id, event);
@@ -60,14 +67,17 @@ public class EventController {
     }
     
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CLUB_COORDINATOR')")
     public ResponseEntity<Void> deleteEvent(@PathVariable Long id) {
         eventService.deleteEvent(id);
         return ResponseEntity.noContent().build();
     }
     
     @PutMapping("/{id}/approve")
-    public ResponseEntity<Event> approveEvent(@PathVariable Long id, @RequestParam String approvedBy) {
+    @PreAuthorize("hasAnyRole('ADMIN', 'CLUB_COORDINATOR')")
+    public ResponseEntity<Event> approveEvent(@PathVariable Long id, @RequestBody Map<String, String> data) {
         try {
+            String approvedBy = data.get("approvedBy");
             Event approvedEvent = eventService.approveEvent(id, approvedBy);
             return ResponseEntity.ok(approvedEvent);
         } catch (RuntimeException e) {
@@ -76,10 +86,11 @@ public class EventController {
     }
     
     @PutMapping("/{id}/reject")
-    public ResponseEntity<Event> rejectEvent(@PathVariable Long id, 
-                                             @RequestParam String rejectedBy,
-                                             @RequestParam(required = false) String reason) {
+    @PreAuthorize("hasAnyRole('ADMIN', 'CLUB_COORDINATOR')")
+    public ResponseEntity<Event> rejectEvent(@PathVariable Long id, @RequestBody Map<String, String> data) {
         try {
+            String rejectedBy = data.get("rejectedBy");
+            String reason = data.getOrDefault("reason", "");
             Event rejectedEvent = eventService.rejectEvent(id, rejectedBy, reason);
             return ResponseEntity.ok(rejectedEvent);
         } catch (RuntimeException e) {
@@ -88,8 +99,10 @@ public class EventController {
     }
     
     @PutMapping("/{id}/pre-report")
-    public ResponseEntity<Event> addPreEventReport(@PathVariable Long id, @RequestBody String report) {
+    @PreAuthorize("hasAnyRole('ADMIN', 'CLUB_COORDINATOR', 'CLUB_PRESIDENT')")
+    public ResponseEntity<Event> addPreEventReport(@PathVariable Long id, @RequestBody Map<String, String> data) {
         try {
+            String report = data.get("report");
             Event updatedEvent = eventService.addPreEventReport(id, report);
             return ResponseEntity.ok(updatedEvent);
         } catch (RuntimeException e) {
@@ -98,8 +111,10 @@ public class EventController {
     }
     
     @PutMapping("/{id}/post-report")
-    public ResponseEntity<Event> addPostEventReport(@PathVariable Long id, @RequestBody String report) {
+    @PreAuthorize("hasAnyRole('ADMIN', 'CLUB_COORDINATOR', 'CLUB_PRESIDENT')")
+    public ResponseEntity<Event> addPostEventReport(@PathVariable Long id, @RequestBody Map<String, String> data) {
         try {
+            String report = data.get("report");
             Event updatedEvent = eventService.addPostEventReport(id, report);
             return ResponseEntity.ok(updatedEvent);
         } catch (RuntimeException e) {
@@ -108,6 +123,7 @@ public class EventController {
     }
     
     @GetMapping("/pending-approval")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CLUB_COORDINATOR')")
     public ResponseEntity<List<Event>> getPendingEvents() {
         return ResponseEntity.ok(eventService.getPendingEvents());
     }

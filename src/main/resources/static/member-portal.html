@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Member Portal - ClubConnect</title>
+    <link rel="stylesheet" href="css/member-portal.css">
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar">
+            <div class="nav-brand">
+                <h1>ClubConnect Member Portal</h1>
+            </div>
+            <div class="nav-menu">
+                <span id="memberName"></span>
+                <span id="clubName" class="club-badge"></span>
+                <button onclick="logout()" class="btn-logout">Logout</button>
+            </div>
+        </nav>
+
+        <div class="celebration-container" id="celebrationContainer"></div>
+
+        <div class="main-content">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="showTab('upcoming')">Upcoming Events</button>
+                <button class="tab-btn" onclick="showTab('past')">Past Events</button>
+                <button class="tab-btn" onclick="showTab('attendance')">My Attendance</button>
+                <button class="tab-btn" onclick="showTab('winners')">Hall of Fame</button>
+                <button class="tab-btn" onclick="showTab('profile')">My Profile</button>
+            </div>
+
+            <div id="upcomingTab" class="tab-content active">
+                <h2>Upcoming Events</h2>
+                <div id="upcomingEvents" class="events-grid"></div>
+            </div>
+
+            <div id="pastTab" class="tab-content">
+                <h2>Past Events</h2>
+                <div id="pastEvents" class="events-grid"></div>
+            </div>
+
+            <div id="attendanceTab" class="tab-content">
+                <h2>My Attendance Record</h2>
+                <div id="attendanceStats" class="stats-container"></div>
+                <div id="attendanceList" class="attendance-list"></div>
+            </div>
+
+            <div id="winnersTab" class="tab-content">
+                <h2>Hall of Fame - Event Winners</h2>
+                <div id="winnersList" class="winners-grid"></div>
+            </div>
+
+            <div id="profileTab" class="tab-content">
+                <h2>My Profile</h2>
+                <div id="profileInfo" class="profile-container"></div>
+                <div class="password-change">
+                    <h3>Change Password</h3>
+                    <form id="passwordForm">
+                        <input type="password" id="oldPassword" placeholder="Current Password" required>
+                        <input type="password" id="newPassword" placeholder="New Password" required>
+                        <input type="password" id="confirmPassword" placeholder="Confirm New Password" required>
+                        <button type="submit" class="btn-primary">Change Password</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/member-portal.js"></script>
+</body>
+</html>

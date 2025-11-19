@@ -42,6 +42,12 @@ public class User {
     @JoinColumn(name = "club_id")
     private Club club;
     
+    @Column(name = "academic_year")
+    private String academicYear; // e.g., "2024-2025"
+    
+    @Column(name = "student_id", unique = true)
+    private String studentId; // Unique student identifier
+    
     @Column(nullable = false)
     private Boolean active = true;
     
@@ -57,8 +63,9 @@ public class User {
     private LocalDateTime updatedAt;
     
     public enum UserRole {
-        OVERALL_CLUB_HEAD,      // Manages all clubs
-        CLUB_COORDINATOR,       // Coordinates specific club activities
-        CLUB_PRESIDENT          // Leads a specific club
+        ADMIN,                  // System admin - can do anything
+        CLUB_COORDINATOR,       // Coordinates specific club activities, can approve events
+        CLUB_PRESIDENT,         // Leads a specific club, can create events and add members
+        MEMBER                  // Club member - can view events and their details
     }
 }
