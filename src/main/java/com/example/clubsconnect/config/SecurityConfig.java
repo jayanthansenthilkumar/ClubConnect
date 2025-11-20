@@ -65,16 +65,37 @@ public class SecurityConfig {
             .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                // Public endpoints - no authentication required
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/member/login").permitAll()
-                .requestMatchers("/", "/index.html", "/login.html", "/css/**", "/js/**", "/images/**").permitAll()
-                .requestMatchers("/api/clubs/**").authenticated()
-                .requestMatchers("/api/members/**").authenticated()
-                .requestMatchers("/api/events/**").authenticated()
-                .requestMatchers("/api/attendance/**").authenticated()
-                .requestMatchers("/api/winners/**").authenticated()
-                .requestMatchers("/api/reports/**").authenticated()
-                .anyRequest().authenticated()
+                .requestMatchers("/", "/login", "/clubconnect", "/member-login", "/member-portal").permitAll()
+                .requestMatchers("/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll()
+                .requestMatchers("/api/clubs", "/api/clubs/**").permitAll()
+                .requestMatchers("/api/events", "/api/events/**").permitAll()
+                
+                // Club endpoints - role-based access
+                .requestMatchers("/api/clubs/*/").hasAnyRole("ADMIN", "CLUB_COORDINATOR", "CLUB_PRESIDENT", "MEMBER")
+                .requestMatchers("/api/clubs").hasAnyRole("ADMIN", "CLUB_COORDINATOR", "CLUB_PRESIDENT", "MEMBER")
+                .requestMatchers("/api/clubs/category/**").hasAnyRole("ADMIN", "CLUB_COORDINATOR", "CLUB_PRESIDENT", "MEMBER")
+                .requestMatchers("/api/clubs/search").hasAnyRole("ADMIN", "CLUB_COORDINATOR", "CLUB_PRESIDENT", "MEMBER")
+                
+                // Event endpoints - role-based access
+                .requestMatchers("/api/events/pending-approval").hasAnyRole("ADMIN", "CLUB_COORDINATOR")
+                .requestMatchers("/api/events/*/approve").hasAnyRole("ADMIN", "CLUB_COORDINATOR")
+                .requestMatchers("/api/events/*/reject").hasAnyRole("ADMIN", "CLUB_COORDINATOR")
+                
+                // Member portal endpoints - member access only
+                .requestMatchers("/api/member/profile").hasRole("MEMBER")
+                .requestMatchers("/api/member/change-password").hasRole("MEMBER")
+                .requestMatchers("/api/member/events/**").hasRole("MEMBER")
+                .requestMatchers("/api/member/attendance/**").hasRole("MEMBER")
+                .requestMatchers("/api/member/winners/**").hasRole("MEMBER")
+                
+                // All other API endpoints require authentication
+                .requestMatchers("/api/**").authenticated()
+                
+                // Any other request
+                .anyRequest().permitAll()
             );
         
         http.authenticationProvider(authenticationProvider());

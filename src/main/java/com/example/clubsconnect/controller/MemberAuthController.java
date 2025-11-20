@@ -75,7 +75,7 @@ public class MemberAuthController {
             }
             
             // Generate JWT token for member
-            String token = jwtUtils.generateTokenFromUsername(member.getUsername());
+            String token = jwtUtils.generateTokenFromUsername(member.getUsername(), "MEMBER");
             
             Map<String, Object> response = new HashMap<>();
             response.put("token", token);

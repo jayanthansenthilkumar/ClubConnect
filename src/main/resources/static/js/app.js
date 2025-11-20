@@ -16,7 +16,7 @@ function checkAuth() {
     const userStr = localStorage.getItem('user');
     
     if (!token || !userStr) {
-        window.location.href = '/login.html';
+        window.location.href = '/login';
         return false;
     }
     
@@ -31,7 +31,7 @@ function checkAuth() {
         console.error('Error parsing user data:', error);
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        window.location.href = '/login.html';
+        window.location.href = '/login';
         return false;
     }
 }
@@ -175,7 +175,7 @@ function updateUserProfile() {
 function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.href = '/login.html';
+    window.location.href = '/login';
 }
 
 // Get auth headers

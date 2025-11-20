@@ -29,6 +29,9 @@ public class MemberService {
     @Autowired
     private EmailService emailService;
     
+    @Autowired
+    private AuditLogService auditLogService;
+    
     private static final String CHAR_LOWER = "abcdefghijklmnopqrstuvwxyz";
     private static final String CHAR_UPPER = CHAR_LOWER.toUpperCase();
     private static final String NUMBER = "0123456789";
@@ -84,6 +87,15 @@ public class MemberService {
         member.setClub(club);
         Member savedMember = memberRepository.save(member);
         
+        // Log member creation
+        auditLogService.logSuccess(
+            "MEMBER_CREATED",
+            "Member",
+            savedMember.getId(),
+            "Created member: " + savedMember.getName() + " (Student ID: " + savedMember.getStudentId() + ")",
+            clubId
+        );
+        
         // Send welcome email with login credentials
         try {
             emailService.sendMemberWelcomeEmail(savedMember, temporaryPassword);
@@ -99,6 +111,8 @@ public class MemberService {
         Member member = memberRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Member not found with id: " + id));
         
+        String changeDetails = "Updated member: " + member.getName();
+        
         member.setName(memberDetails.getName());
         
         // Check if email is being changed and if new email already exists
@@ -106,6 +120,7 @@ public class MemberService {
             if (memberRepository.existsByEmail(memberDetails.getEmail())) {
                 throw new RuntimeException("Email already exists in the system");
             }
+            changeDetails += ", changed email to " + memberDetails.getEmail();
             member.setEmail(memberDetails.getEmail());
         }
         
@@ -113,15 +128,42 @@ public class MemberService {
         member.setRole(memberDetails.getRole());
         member.setDepartment(memberDetails.getDepartment());
         
-        if (memberDetails.getMembershipStatus() != null) {
+        if (memberDetails.getMembershipStatus() != null && 
+            !member.getMembershipStatus().equals(memberDetails.getMembershipStatus())) {
+            changeDetails += ", status changed from " + member.getMembershipStatus() + 
+                           " to " + memberDetails.getMembershipStatus();
             member.setMembershipStatus(memberDetails.getMembershipStatus());
         }
         
-        return memberRepository.save(member);
+        Member savedMember = memberRepository.save(member);
+        
+        // Log member update
+        auditLogService.logSuccess(
+            "MEMBER_UPDATED",
+            "Member",
+            savedMember.getId(),
+            changeDetails,
+            savedMember.getClub().getId()
+        );
+        
+        return savedMember;
     }
     
     public void deleteMember(Long id) {
+        Member member = memberRepository.findById(id).orElse(null);
+        Long clubId = member != null && member.getClub() != null ? member.getClub().getId() : null;
+        String memberInfo = member != null ? member.getName() + " (ID: " + member.getStudentId() + ")" : "Unknown";
+        
         memberRepository.deleteById(id);
+        
+        // Log member deletion
+        auditLogService.logSuccess(
+            "MEMBER_DELETED",
+            "Member",
+            id,
+            "Deleted member: " + memberInfo,
+            clubId
+        );
     }
     
     public Optional<Member> findByUsername(String username) {

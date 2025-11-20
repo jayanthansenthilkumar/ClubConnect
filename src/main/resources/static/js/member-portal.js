@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
     token = localStorage.getItem('memberToken');
     
     if (!token) {
-        window.location.href = '/member-login.html';
+        window.location.href = '/member-login';
         return;
     }
     
@@ -42,7 +42,7 @@ async function loadMemberProfile() {
     } catch (error) {
         console.error('Error loading profile:', error);
         localStorage.removeItem('memberToken');
-        window.location.href = '/member-login.html';
+        window.location.href = '/member-login';
     }
 }
 
@@ -419,5 +419,5 @@ function showTab(tabName) {
 
 function logout() {
     localStorage.removeItem('memberToken');
-    window.location.href = '/member-login.html';
+    window.location.href = '/member-login';
 }

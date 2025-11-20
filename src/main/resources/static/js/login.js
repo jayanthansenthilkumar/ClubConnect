@@ -66,7 +66,7 @@ loginForm.addEventListener('submit', async (e) => {
             
             // Redirect to dashboard after a short delay
             setTimeout(() => {
-                window.location.href = '/index.html';
+                window.location.href = '/clubconnect';
             }, 1000);
         } else {
             showError(data.message || 'Invalid username or password');
@@ -119,7 +119,7 @@ window.addEventListener('DOMContentLoaded', () => {
         })
         .then(response => {
             if (response.ok) {
-                window.location.href = '/index.html';
+                window.location.href = '/clubconnect';
             } else {
                 // Token is invalid, clear storage
                 localStorage.removeItem('token');

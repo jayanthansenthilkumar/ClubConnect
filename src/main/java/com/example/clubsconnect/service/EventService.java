@@ -30,6 +30,9 @@ public class EventService {
     @Autowired
     private EmailService emailService;
     
+    @Autowired
+    private AuditLogService auditLogService;
+    
     public List<Event> getAllEvents() {
         return eventRepository.findAll();
     }
@@ -55,6 +58,15 @@ public class EventService {
         event.setApprovalStatus("PENDING");
         
         Event savedEvent = eventRepository.save(event);
+        
+        // Log the event creation
+        auditLogService.logSuccess(
+            "EVENT_CREATED",
+            "Event",
+            savedEvent.getId(),
+            "Created event: " + savedEvent.getTitle(),
+            clubId
+        );
         
         // Send email notification to all active members of the club
         try {
@@ -113,6 +125,15 @@ public class EventService {
         
         Event savedEvent = eventRepository.save(event);
         
+        // Log the event approval
+        auditLogService.logSuccess(
+            "EVENT_APPROVED",
+            "Event",
+            savedEvent.getId(),
+            "Approved event: " + savedEvent.getTitle() + " by " + approvedBy,
+            savedEvent.getClub().getId()
+        );
+        
         // Send approval notification to all active members
         try {
             List<Member> members = memberRepository.findByClubId(event.getClub().getId());
@@ -139,7 +160,18 @@ public class EventService {
         event.setApprovedAt(LocalDateTime.now());
         event.setRejectionReason(reason);
         
-        return eventRepository.save(event);
+        Event savedEvent = eventRepository.save(event);
+        
+        // Log the event rejection
+        auditLogService.logSuccess(
+            "EVENT_REJECTED",
+            "Event",
+            savedEvent.getId(),
+            "Rejected event: " + savedEvent.getTitle() + " by " + rejectedBy + ". Reason: " + reason,
+            savedEvent.getClub().getId()
+        );
+        
+        return savedEvent;
     }
     
     public Event addPreEventReport(Long id, String report) {
